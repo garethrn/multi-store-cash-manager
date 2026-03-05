@@ -15,18 +15,25 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Render the stores management page.
  */
 function mscm_render_stores_page() {
-	if ( ! current_user_can( 'mscm_manage_all_stores' ) && ! current_user_can( 'manage_options' ) ) {
+	if ( ! current_user_can( 'mscm_manage_all_stores' ) && ! current_user_can( 'mscm_manage_store' ) && ! current_user_can( 'manage_options' ) ) {
 		wp_die( esc_html__( 'Permission denied.', 'multi-store-cash-manager' ) );
 	}
 
-	$stores     = MSCM()->db->get_stores( false );
+	// Admins see all stores; managers see only their assigned stores.
+	if ( current_user_can( 'mscm_manage_all_stores' ) || current_user_can( 'manage_options' ) ) {
+		$stores = MSCM()->db->get_stores( false );
+	} else {
+		$stores = MSCM()->db->get_user_stores( get_current_user_id() );
+	}
 	$all_users  = MSCM_Roles::get_mscm_users();
 	?>
 	<div class="wrap mscm-admin">
 		<h1 class="wp-heading-inline"><?php esc_html_e( 'Manage Stores', 'multi-store-cash-manager' ); ?></h1>
+		<?php if ( current_user_can( 'mscm_manage_all_stores' ) || current_user_can( 'manage_options' ) ) : ?>
 		<button class="page-title-action" id="mscm-add-store-btn">
 			+ <?php esc_html_e( 'Add Store', 'multi-store-cash-manager' ); ?>
 		</button>
+		<?php endif; ?>
 		<hr class="wp-header-end">
 
 		<!-- Add/Edit Store Form (hidden by default) -->

@@ -46,12 +46,12 @@ function mscm_register_admin_menus() {
 		'mscm_admin_entries_page'
 	);
 
-	// Stores (admin only).
+	// Stores (admin and managers).
 	add_submenu_page(
 		'mscm-dashboard',
 		__( 'Manage Stores', 'multi-store-cash-manager' ),
 		__( 'Stores', 'multi-store-cash-manager' ),
-		'mscm_manage_all_stores',
+		'mscm_manage_store',
 		'mscm-stores',
 		'mscm_admin_stores_page'
 	);

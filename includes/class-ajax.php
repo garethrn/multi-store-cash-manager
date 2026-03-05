@@ -120,6 +120,8 @@ class MSCM_Ajax {
 			'user_id'       => get_current_user_id(),
 			'entry_date'    => $entry_date,
 			'denom_50c'     => absint( $_POST['denom_50c'] ?? 0 ),
+			'denom_20c'     => absint( $_POST['denom_20c'] ?? 0 ),
+			'denom_10c'     => absint( $_POST['denom_10c'] ?? 0 ),
 			'credit_card'   => floatval( $_POST['credit_card'] ?? 0 ),
 			'eft'           => floatval( $_POST['eft'] ?? 0 ),
 			'other_digital' => floatval( $_POST['other_digital'] ?? 0 ),
@@ -143,13 +145,16 @@ class MSCM_Ajax {
 			( $entry_data['denom_5'] * 5 ) +
 			( $entry_data['denom_2'] * 2 ) +
 			( $entry_data['denom_1'] * 1 ) +
-			( $entry_data['denom_50c'] * 0.5 )
+			( $entry_data['denom_50c'] * 0.5 ) +
+			( $entry_data['denom_20c'] * 0.2 ) +
+			( $entry_data['denom_10c'] * 0.1 )
 		);
 
 		$entry_data['total_cash']   = $total_cash;
 		$entry_data['cash_to_bank'] = max( 0, $total_cash - $entry_data['float_amount'] );
 
-		$total_sales = $total_cash + $entry_data['credit_card'] + $entry_data['eft'] + $entry_data['other_digital'];
+		// Total sales uses cash-to-bank (float excluded) plus other payment methods.
+		$total_sales = $entry_data['cash_to_bank'] + $entry_data['credit_card'] + $entry_data['eft'] + $entry_data['other_digital'];
 		$entry_data['total_sales'] = $total_sales;
 		$entry_data['discrepancy'] = $total_sales - $entry_data['pos_reported'];
 
@@ -228,16 +233,40 @@ class MSCM_Ajax {
 			MSCM()->ml->detect_anomalies( $entry_id );
 		}
 
+		// Determine discrepancy status label.
+		$discrepancy        = $entry_data['discrepancy'];
+		$currency           = get_option( 'mscm_currency', 'R' );
+		$discrepancy_label  = '';
+		if ( $discrepancy < 0 ) {
+			/* translators: %1$s currency symbol, %2$s formatted amount */
+			$discrepancy_label = sprintf(
+				__( 'Shortage of %1$s%2$s', 'multi-store-cash-manager' ),
+				$currency,
+				number_format( abs( $discrepancy ), 2 )
+			);
+		} elseif ( $discrepancy > 0 ) {
+			/* translators: %1$s currency symbol, %2$s formatted amount */
+			$discrepancy_label = sprintf(
+				__( 'Over by %1$s%2$s', 'multi-store-cash-manager' ),
+				$currency,
+				number_format( $discrepancy, 2 )
+			);
+		} else {
+			$discrepancy_label = __( 'Balanced', 'multi-store-cash-manager' );
+		}
+
 		wp_send_json_success(
 			array(
-				'entry_id' => $entry_id,
-				'message'  => __( 'Entry saved successfully!', 'multi-store-cash-manager' ),
-				'totals'   => array(
-					'total_cash'   => $entry_data['total_cash'],
-					'cash_to_bank' => $entry_data['cash_to_bank'],
-					'total_sales'  => $entry_data['total_sales'],
-					'discrepancy'  => $entry_data['discrepancy'],
-					'net_banking'  => $entry_data['net_banking'],
+				'entry_id'          => $entry_id,
+				'message'           => __( 'Entry saved successfully!', 'multi-store-cash-manager' ),
+				'discrepancy_label' => $discrepancy_label,
+				'totals'            => array(
+					'total_cash'        => $entry_data['total_cash'],
+					'cash_to_bank'      => $entry_data['cash_to_bank'],
+					'total_sales'       => $entry_data['total_sales'],
+					'discrepancy'       => $discrepancy,
+					'discrepancy_label' => $discrepancy_label,
+					'net_banking'       => $entry_data['net_banking'],
 				),
 			)
 		);
@@ -305,14 +334,14 @@ class MSCM_Ajax {
 	}
 
 	/**
-	 * Handle saving a store (admin).
+	 * Handle saving a store (admin or manager).
 	 */
 	public function save_store() {
 		if ( ! $this->verify_request( 'mscm_admin_nonce' ) ) {
 			return;
 		}
 
-		if ( ! current_user_can( 'mscm_manage_all_stores' ) && ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( 'mscm_manage_all_stores' ) && ! current_user_can( 'mscm_manage_store' ) && ! current_user_can( 'manage_options' ) ) {
 			$this->error( __( 'Permission denied.', 'multi-store-cash-manager' ), 403 );
 			return;
 		}
@@ -330,6 +359,14 @@ class MSCM_Ajax {
 			'timezone'      => sanitize_text_field( wp_unslash( $_POST['timezone'] ?? 'Africa/Johannesburg' ) ),
 			'is_active'     => absint( $_POST['is_active'] ?? 1 ),
 		);
+
+		// A non-admin manager may only edit stores they are assigned to.
+		if ( ! current_user_can( 'mscm_manage_all_stores' ) && ! current_user_can( 'manage_options' ) ) {
+			if ( ! empty( $data['id'] ) && ! MSCM_Roles::user_can_access_store( $data['id'] ) ) {
+				$this->error( __( 'Permission denied.', 'multi-store-cash-manager' ), 403 );
+				return;
+			}
+		}
 
 		if ( empty( $data['name'] ) ) {
 			$this->error( __( 'Store name is required.', 'multi-store-cash-manager' ) );
@@ -354,7 +391,7 @@ class MSCM_Ajax {
 	}
 
 	/**
-	 * Handle deleting a store (admin).
+	 * Handle deleting a store (admin only).
 	 */
 	public function delete_store() {
 		if ( ! $this->verify_request( 'mscm_admin_nonce' ) ) {
@@ -553,7 +590,7 @@ class MSCM_Ajax {
 			return;
 		}
 
-		if ( ! current_user_can( 'mscm_manage_users' ) && ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( 'mscm_manage_users' ) && ! current_user_can( 'mscm_manage_store' ) && ! current_user_can( 'manage_options' ) ) {
 			$this->error( __( 'Permission denied.', 'multi-store-cash-manager' ), 403 );
 			return;
 		}
@@ -565,6 +602,14 @@ class MSCM_Ajax {
 		if ( ! $user_id || ! $store_id ) {
 			$this->error( __( 'User ID and Store ID are required.', 'multi-store-cash-manager' ) );
 			return;
+		}
+
+		// A manager may only assign users to their own store.
+		if ( ! current_user_can( 'mscm_manage_users' ) && ! current_user_can( 'manage_options' ) ) {
+			if ( ! MSCM_Roles::user_can_access_store( $store_id ) ) {
+				$this->error( __( 'Permission denied.', 'multi-store-cash-manager' ), 403 );
+				return;
+			}
 		}
 
 		$result = MSCM()->db->assign_user_to_store( $user_id, $store_id, $role );
@@ -585,7 +630,7 @@ class MSCM_Ajax {
 			return;
 		}
 
-		if ( ! current_user_can( 'mscm_manage_users' ) && ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( 'mscm_manage_users' ) && ! current_user_can( 'mscm_manage_store' ) && ! current_user_can( 'manage_options' ) ) {
 			$this->error( __( 'Permission denied.', 'multi-store-cash-manager' ), 403 );
 			return;
 		}
@@ -596,6 +641,14 @@ class MSCM_Ajax {
 		if ( ! $user_id || ! $store_id ) {
 			$this->error( __( 'User ID and Store ID are required.', 'multi-store-cash-manager' ) );
 			return;
+		}
+
+		// A manager may only remove users from their own store.
+		if ( ! current_user_can( 'mscm_manage_users' ) && ! current_user_can( 'manage_options' ) ) {
+			if ( ! MSCM_Roles::user_can_access_store( $store_id ) ) {
+				$this->error( __( 'Permission denied.', 'multi-store-cash-manager' ), 403 );
+				return;
+			}
 		}
 
 		$result = MSCM()->db->remove_user_from_store( $user_id, $store_id );

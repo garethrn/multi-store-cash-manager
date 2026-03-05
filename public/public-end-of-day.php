@@ -65,6 +65,8 @@ function mscm_end_of_day_shortcode( $atts ) {
 		'denom_2'   => array( 'label' => 'R2', 'value' => 2 ),
 		'denom_1'   => array( 'label' => 'R1', 'value' => 1 ),
 		'denom_50c' => array( 'label' => '50c', 'value' => 0.5 ),
+		'denom_20c' => array( 'label' => '20c', 'value' => 0.2 ),
+		'denom_10c' => array( 'label' => '10c', 'value' => 0.1 ),
 	);
 
 	ob_start();
@@ -75,7 +77,7 @@ function mscm_end_of_day_shortcode( $atts ) {
 		<div id="mscm-eod-message" class="mscm-message" style="display:none;"></div>
 
 		<form id="mscm-eod-form" class="mscm-form" novalidate>
-			<?php wp_nonce_field( 'mscm_public_nonce', '_wpnonce' ); ?>
+			<?php wp_nonce_field( 'mscm_public_nonce', 'nonce' ); ?>
 			<input type="hidden" name="action" value="mscm_save_daily_entry">
 
 			<!-- Store & Date Selection -->
@@ -255,6 +257,10 @@ function mscm_end_of_day_shortcode( $atts ) {
 						<span id="mscm-total-sales"><?php echo esc_html( $currency . '0.00' ); ?></span>
 					</div>
 					<div class="mscm-summary-divider"></div>
+					<div class="mscm-summary-row">
+						<span><?php esc_html_e( 'Less Float:', 'multi-store-cash-manager' ); ?></span>
+						<span id="mscm-summary-float">- <?php echo esc_html( $currency . '0.00' ); ?></span>
+					</div>
 					<div class="mscm-summary-row mscm-summary-banking">
 						<span><?php esc_html_e( 'Cash to Bank:', 'multi-store-cash-manager' ); ?></span>
 						<span id="mscm-summary-banking"><?php echo esc_html( $currency . '0.00' ); ?></span>
@@ -262,6 +268,10 @@ function mscm_end_of_day_shortcode( $atts ) {
 					<div class="mscm-summary-row mscm-discrepancy-row">
 						<span><?php esc_html_e( 'Discrepancy:', 'multi-store-cash-manager' ); ?></span>
 						<span id="mscm-discrepancy"><?php echo esc_html( $currency . '0.00' ); ?></span>
+					</div>
+					<div class="mscm-summary-row" id="mscm-discrepancy-status-row" style="display:none;">
+						<span></span>
+						<span id="mscm-discrepancy-status" class="mscm-discrepancy-label"></span>
 					</div>
 					<div class="mscm-summary-row mscm-summary-net">
 						<span><?php esc_html_e( 'Net Banking:', 'multi-store-cash-manager' ); ?></span>

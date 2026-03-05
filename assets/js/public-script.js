@@ -104,7 +104,8 @@
 			const eft          = parseFloat( $( '#mscm-eft' ).val() ) || 0;
 			const otherDigital = parseFloat( $( '#mscm-other-digital' ).val() ) || 0;
 
-			const totalSales = totalCash + creditCard + eft + otherDigital;
+			// Total sales uses cash-to-bank (float excluded) + other payment types.
+			const totalSales = cashToBank + creditCard + eft + otherDigital;
 
 			const posReported  = parseFloat( $( '#mscm-pos-reported' ).val() ) || 0;
 			const discrepancy  = totalSales - posReported;
@@ -118,6 +119,7 @@
 			$( '#mscm-cash-to-bank' ).text( formatCurrency( cashToBank ) );
 
 			$( '#mscm-summary-cash' ).text( formatCurrency( totalCash ) );
+			$( '#mscm-summary-float' ).text( '- ' + formatCurrency( float ) );
 			$( '#mscm-summary-card' ).text( formatCurrency( creditCard ) );
 			$( '#mscm-summary-eft' ).text( formatCurrency( eft ) );
 			$( '#mscm-total-sales' ).text( formatCurrency( totalSales ) );
@@ -126,16 +128,33 @@
 			$( '#mscm-total-purchases' ).text( formatCurrency( totalPurchases ) );
 			$( '#mscm-net-banking' ).text( formatCurrency( netBanking ) );
 
-			// Discrepancy with color.
-			const $discEl = $( '#mscm-discrepancy' );
-			$discEl.text( formatCurrency( discrepancy ) );
+			// Discrepancy with color and shortage/over label.
+			const $discEl     = $( '#mscm-discrepancy' );
+			const $statusRow  = $( '#mscm-discrepancy-status-row' );
+			const $statusEl   = $( '#mscm-discrepancy-status' );
 
-			$discEl.removeClass( 'mscm-text-danger mscm-text-success' );
-			if ( Math.abs( discrepancy ) > 100 ) {
+			$discEl.text( formatCurrency( discrepancy ) );
+			$discEl.removeClass( 'mscm-text-danger mscm-text-success mscm-text-warning' );
+
+			let statusText  = '';
+			let statusClass = '';
+
+			if ( discrepancy < 0 ) {
+				statusText  = 'Shortage of ' + formatCurrency( Math.abs( discrepancy ) );
+				statusClass = 'mscm-text-danger';
 				$discEl.addClass( 'mscm-text-danger' );
-			} else if ( discrepancy === 0 ) {
+			} else if ( discrepancy > 0 ) {
+				statusText  = 'Over by ' + formatCurrency( discrepancy );
+				statusClass = 'mscm-text-warning';
+				$discEl.addClass( 'mscm-text-warning' );
+			} else {
+				statusText  = 'Balanced';
+				statusClass = 'mscm-text-success';
 				$discEl.addClass( 'mscm-text-success' );
 			}
+
+			$statusEl.text( statusText ).removeClass( 'mscm-text-danger mscm-text-warning mscm-text-success' ).addClass( statusClass );
+			$statusRow.toggle( posReported > 0 );
 		}
 
 		/**
@@ -232,14 +251,18 @@
 					// Show totals.
 					const totals = response.data.totals;
 					if ( totals ) {
-						const summaryHtml = [
+						const discLabel = totals.discrepancy_label || '';
+						const summaryLines = [
 							'<strong>Entry Submitted Successfully!</strong>',
 							'Total Sales: ' + formatCurrency( totals.total_sales ),
 							'Cash to Bank: ' + formatCurrency( totals.cash_to_bank ),
 							'Discrepancy: ' + formatCurrency( totals.discrepancy ),
-						].join( '<br>' );
+						];
+						if ( discLabel ) {
+							summaryLines.push( '<strong>' + discLabel + '</strong>' );
+						}
 
-						$( '#mscm-eod-message' ).html( summaryHtml ).show();
+						$( '#mscm-eod-message' ).html( summaryLines.join( '<br>' ) ).show();
 					}
 
 					// Reset form after delay.

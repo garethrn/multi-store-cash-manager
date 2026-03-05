@@ -116,6 +116,8 @@ class MSCM_DB {
 			denom_2 int(11) NOT NULL DEFAULT 0,
 			denom_1 int(11) NOT NULL DEFAULT 0,
 			denom_50c int(11) NOT NULL DEFAULT 0,
+			denom_20c int(11) NOT NULL DEFAULT 0,
+			denom_10c int(11) NOT NULL DEFAULT 0,
 			-- Totals.
 			total_cash decimal(10,2) NOT NULL DEFAULT 0.00,
 			float_amount decimal(10,2) NOT NULL DEFAULT 500.00,
@@ -522,7 +524,7 @@ class MSCM_DB {
 		$allowed = array(
 			'store_id', 'user_id', 'entry_date',
 			'denom_200', 'denom_100', 'denom_50', 'denom_20', 'denom_10',
-			'denom_5', 'denom_2', 'denom_1', 'denom_50c',
+			'denom_5', 'denom_2', 'denom_1', 'denom_50c', 'denom_20c', 'denom_10c',
 			'total_cash', 'float_amount', 'cash_to_bank',
 			'credit_card', 'eft', 'other_digital',
 			'total_sales', 'pos_reported', 'discrepancy', 'net_banking',

@@ -60,6 +60,7 @@ class MSCM_Roles {
 		'mscm_verify_entry'           => true,
 		'mscm_view_store_entries'     => true,
 		'mscm_manage_store'           => true,
+		'mscm_manage_users'           => true,
 		'mscm_set_targets'            => true,
 		'mscm_view_reports'           => true,
 		'mscm_export_reports'         => true,
