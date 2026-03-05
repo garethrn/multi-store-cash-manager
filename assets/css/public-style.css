@@ -1,0 +1,634 @@
+/**
+ * Multi-Store Cash Manager - Frontend/Public Styles
+ *
+ * @package MultiStoreCashManager
+ * @version 1.0.0
+ */
+
+/* === Variables === */
+:root {
+	--mscm-primary:        #2563eb;
+	--mscm-primary-light:  #dbeafe;
+	--mscm-primary-dark:   #1d4ed8;
+	--mscm-success:        #10b981;
+	--mscm-success-light:  #d1fae5;
+	--mscm-warning:        #f59e0b;
+	--mscm-warning-light:  #fef3c7;
+	--mscm-danger:         #ef4444;
+	--mscm-danger-light:   #fee2e2;
+	--mscm-info:           #06b6d4;
+	--mscm-dark:           #1f2937;
+	--mscm-gray:           #6b7280;
+	--mscm-gray-light:     #f3f4f6;
+	--mscm-light:          #f9fafb;
+	--mscm-white:          #ffffff;
+	--mscm-border:         #e5e7eb;
+	--mscm-radius:         10px;
+	--mscm-radius-sm:      6px;
+	--mscm-shadow:         0 1px 3px rgba(0,0,0,0.1);
+	--mscm-shadow-md:      0 4px 12px rgba(0,0,0,0.08);
+	--mscm-font:           -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* === Global Reset for MSCM Components === */
+.mscm-dashboard *,
+.mscm-eod-wrapper *,
+.mscm-history-wrapper *,
+.mscm-targets-wrapper * {
+	box-sizing: border-box;
+}
+
+/* === Typography === */
+.mscm-form-title,
+.mscm-section-title {
+	font-family: var(--mscm-font);
+	font-size: 22px;
+	font-weight: 700;
+	color: var(--mscm-dark);
+	margin: 0 0 24px;
+	padding-bottom: 12px;
+	border-bottom: 2px solid var(--mscm-primary);
+}
+
+/* === Messages === */
+.mscm-login-notice,
+.mscm-notice,
+.mscm-error {
+	padding: 16px 20px;
+	border-radius: var(--mscm-radius);
+	margin-bottom: 20px;
+	font-family: var(--mscm-font);
+}
+
+.mscm-login-notice { background: var(--mscm-primary-light); border-left: 4px solid var(--mscm-primary); }
+.mscm-notice       { background: var(--mscm-light); border: 1px solid var(--mscm-border); }
+.mscm-error        { background: var(--mscm-danger-light); border-left: 4px solid var(--mscm-danger); }
+
+.mscm-message {
+	padding: 12px 16px;
+	border-radius: var(--mscm-radius-sm);
+	margin-bottom: 16px;
+	font-size: 14px;
+}
+
+.mscm-message.mscm-success { background: var(--mscm-success-light); color: #065f46; }
+.mscm-message.mscm-error   { background: var(--mscm-danger-light); color: #991b1b; }
+
+/* === Buttons === */
+.mscm-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 10px 20px;
+	border-radius: var(--mscm-radius-sm);
+	font-family: var(--mscm-font);
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	border: 2px solid transparent;
+	transition: all 0.2s;
+	text-decoration: none;
+	line-height: 1;
+}
+
+.mscm-btn:focus { outline: 2px solid var(--mscm-primary); outline-offset: 2px; }
+
+.mscm-btn-primary {
+	background: var(--mscm-primary);
+	color: var(--mscm-white);
+	border-color: var(--mscm-primary);
+}
+
+.mscm-btn-primary:hover {
+	background: var(--mscm-primary-dark);
+	border-color: var(--mscm-primary-dark);
+	color: var(--mscm-white);
+	text-decoration: none;
+}
+
+.mscm-btn-outline {
+	background: transparent;
+	color: var(--mscm-primary);
+	border-color: var(--mscm-primary);
+}
+
+.mscm-btn-outline:hover {
+	background: var(--mscm-primary);
+	color: var(--mscm-white);
+	text-decoration: none;
+}
+
+.mscm-btn-danger {
+	background: var(--mscm-danger);
+	color: var(--mscm-white);
+	border-color: var(--mscm-danger);
+}
+
+.mscm-btn-danger:hover { background: #dc2626; border-color: #dc2626; color: var(--mscm-white); }
+
+.mscm-btn-sm  { padding: 6px 12px; font-size: 12px; }
+.mscm-btn-lg  { padding: 14px 32px; font-size: 16px; width: 100%; justify-content: center; }
+
+.mscm-btn[disabled] {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+/* === Form Inputs === */
+.mscm-input,
+.mscm-select,
+.mscm-textarea {
+	width: 100%;
+	padding: 10px 14px;
+	border: 2px solid var(--mscm-border);
+	border-radius: var(--mscm-radius-sm);
+	font-family: var(--mscm-font);
+	font-size: 14px;
+	color: var(--mscm-dark);
+	background: var(--mscm-white);
+	transition: border-color 0.2s;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+.mscm-input:focus,
+.mscm-select:focus,
+.mscm-textarea:focus {
+	outline: none;
+	border-color: var(--mscm-primary);
+	box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.mscm-input-sm { padding: 6px 10px; font-size: 13px; width: auto; min-width: 80px; }
+
+.mscm-input-currency {
+	display: flex;
+	align-items: center;
+	border: 2px solid var(--mscm-border);
+	border-radius: var(--mscm-radius-sm);
+	overflow: hidden;
+	background: var(--mscm-white);
+}
+
+.mscm-input-currency span {
+	padding: 0 10px;
+	background: var(--mscm-light);
+	color: var(--mscm-gray);
+	font-weight: 600;
+	border-right: 1px solid var(--mscm-border);
+	white-space: nowrap;
+	line-height: 44px;
+	font-size: 14px;
+}
+
+.mscm-input-currency .mscm-input {
+	border: none;
+	border-radius: 0;
+	margin: 0;
+}
+
+.mscm-input-currency .mscm-input:focus {
+	box-shadow: none;
+}
+
+.mscm-textarea { resize: vertical; min-height: 80px; }
+.mscm-select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; padding-right: 36px; }
+
+/* === Form Structure === */
+.mscm-form {
+	font-family: var(--mscm-font);
+}
+
+.mscm-form-section {
+	background: var(--mscm-white);
+	border: 1px solid var(--mscm-border);
+	border-radius: var(--mscm-radius);
+	padding: 24px;
+	margin-bottom: 20px;
+	box-shadow: var(--mscm-shadow);
+}
+
+.mscm-form-section h3 {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin: 0 0 20px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid var(--mscm-border);
+	font-size: 16px;
+	font-weight: 700;
+	color: var(--mscm-dark);
+}
+
+.mscm-form-group {
+	margin-bottom: 16px;
+}
+
+.mscm-form-group label {
+	display: block;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--mscm-dark);
+	margin-bottom: 6px;
+}
+
+.mscm-form-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 16px;
+}
+
+.mscm-form-actions {
+	padding: 16px 0 0;
+}
+
+/* === Denomination Grid === */
+.mscm-denomination-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 12px;
+	margin-bottom: 20px;
+}
+
+.mscm-denom-row {
+	display: flex;
+	align-items: center;
+	background: var(--mscm-light);
+	border: 1px solid var(--mscm-border);
+	border-radius: var(--mscm-radius-sm);
+	padding: 10px 12px;
+	gap: 8px;
+}
+
+.mscm-denom-label {
+	display: flex;
+	align-items: center;
+	min-width: 48px;
+}
+
+.mscm-denom-value {
+	font-weight: 700;
+	font-size: 15px;
+	color: var(--mscm-dark);
+}
+
+.mscm-denom-input-group {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex: 1;
+}
+
+.mscm-denom-count {
+	width: 70px;
+	padding: 6px 10px;
+	text-align: center;
+}
+
+.mscm-denom-mult { color: var(--mscm-gray); font-size: 12px; }
+.mscm-denom-equals { color: var(--mscm-gray); font-size: 12px; }
+
+.mscm-denom-total {
+	font-weight: 600;
+	font-size: 13px;
+	color: var(--mscm-primary);
+	min-width: 70px;
+	text-align: right;
+}
+
+/* === Cash Summary === */
+.mscm-cash-summary {
+	background: var(--mscm-primary-light);
+	border-radius: var(--mscm-radius-sm);
+	padding: 16px;
+	margin-top: 16px;
+}
+
+.mscm-summary-section .mscm-form-section {
+	background: var(--mscm-light);
+}
+
+.mscm-banking-summary {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.mscm-summary-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 6px 0;
+	font-size: 14px;
+}
+
+.mscm-summary-total {
+	font-size: 16px;
+	font-weight: 700;
+	color: var(--mscm-primary);
+	padding: 10px 0;
+	border-top: 2px solid var(--mscm-border);
+	margin-top: 4px;
+}
+
+.mscm-summary-banking {
+	font-weight: 600;
+	color: var(--mscm-success);
+}
+
+.mscm-summary-net {
+	font-weight: 700;
+	font-size: 16px;
+	border-top: 2px solid var(--mscm-border);
+	padding-top: 10px;
+	margin-top: 4px;
+}
+
+.mscm-summary-divider {
+	height: 1px;
+	background: var(--mscm-border);
+	margin: 4px 0;
+}
+
+.mscm-discrepancy-row span:last-child {
+	font-weight: 600;
+}
+
+.mscm-float-input {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+/* === Payment Grid === */
+.mscm-payment-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 16px;
+}
+
+/* === Dynamic Rows === */
+.mscm-dynamic-row {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	margin-bottom: 8px;
+	flex-wrap: wrap;
+}
+
+.mscm-dyn-description { flex: 2; min-width: 150px; }
+.mscm-dyn-category    { flex: 1; min-width: 100px; }
+.mscm-dyn-receipt     { flex: 1; min-width: 100px; }
+.mscm-dyn-amount      { width: 110px; }
+
+/* === Dashboard === */
+.mscm-dashboard {
+	font-family: var(--mscm-font);
+}
+
+.mscm-stats-row {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: 16px;
+	margin-bottom: 24px;
+}
+
+.mscm-stat-box {
+	background: var(--mscm-white);
+	border: 1px solid var(--mscm-border);
+	border-radius: var(--mscm-radius);
+	padding: 20px;
+	text-align: center;
+	box-shadow: var(--mscm-shadow);
+	border-top: 3px solid var(--mscm-primary);
+}
+
+.mscm-stat-box.mscm-stat-warning { border-top-color: var(--mscm-warning); }
+
+.mscm-stat-number { font-size: 22px; font-weight: 700; color: var(--mscm-dark); }
+.mscm-stat-title  { font-size: 12px; color: var(--mscm-gray); margin-top: 4px; font-weight: 500; }
+
+.mscm-section {
+	margin-bottom: 28px;
+}
+
+.mscm-section h3 {
+	font-size: 18px;
+	font-weight: 700;
+	color: var(--mscm-dark);
+	margin: 0 0 16px;
+}
+
+/* === Store Cards Public === */
+.mscm-store-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	gap: 16px;
+}
+
+.mscm-store-card-public {
+	background: var(--mscm-white);
+	border: 1px solid var(--mscm-border);
+	border-radius: var(--mscm-radius);
+	padding: 20px;
+	box-shadow: var(--mscm-shadow);
+}
+
+.mscm-store-card-header h4 {
+	margin: 0 0 4px;
+	font-size: 16px;
+	font-weight: 700;
+}
+
+.mscm-store-location {
+	font-size: 12px;
+	color: var(--mscm-gray);
+	margin-bottom: 16px;
+	display: block;
+}
+
+.mscm-store-card-stats {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-bottom: 16px;
+	padding: 12px;
+	background: var(--mscm-light);
+	border-radius: var(--mscm-radius-sm);
+}
+
+.mscm-store-today,
+.mscm-store-mtd {
+	display: flex;
+	justify-content: space-between;
+}
+
+.mscm-label { color: var(--mscm-gray); font-size: 13px; }
+.mscm-value { font-weight: 600; font-size: 13px; }
+
+.mscm-store-card-footer {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.mscm-entry-status { font-size: 13px; }
+.mscm-entry-submitted { color: var(--mscm-success); }
+.mscm-entry-missing   { color: var(--mscm-warning); }
+
+/* === Quick Links === */
+.mscm-quick-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+
+.mscm-quick-link {
+	padding: 10px 20px;
+	background: var(--mscm-primary-light);
+	color: var(--mscm-primary);
+	border-radius: var(--mscm-radius-sm);
+	text-decoration: none;
+	font-weight: 600;
+	font-size: 14px;
+	transition: all 0.2s;
+}
+
+.mscm-quick-link:hover {
+	background: var(--mscm-primary);
+	color: var(--mscm-white);
+	text-decoration: none;
+}
+
+/* === History Table === */
+.mscm-history-table-wrapper { overflow-x: auto; }
+
+.mscm-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 14px;
+	font-family: var(--mscm-font);
+}
+
+.mscm-table th {
+	background: var(--mscm-light);
+	padding: 10px 14px;
+	text-align: left;
+	font-size: 12px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	color: var(--mscm-gray);
+	border-bottom: 2px solid var(--mscm-border);
+}
+
+.mscm-table td {
+	padding: 12px 14px;
+	border-bottom: 1px solid var(--mscm-border);
+	vertical-align: middle;
+}
+
+.mscm-table tr:hover td { background: var(--mscm-light); }
+
+/* === Badges === */
+.mscm-badge {
+	display: inline-block;
+	padding: 3px 10px;
+	border-radius: 12px;
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+.mscm-badge-pending  { background: var(--mscm-warning-light); color: #92400e; }
+.mscm-badge-verified { background: var(--mscm-success-light); color: #065f46; }
+
+/* === Targets Public === */
+.mscm-target-item {
+	background: var(--mscm-white);
+	border: 1px solid var(--mscm-border);
+	border-radius: var(--mscm-radius);
+	padding: 20px;
+	margin-bottom: 16px;
+	box-shadow: var(--mscm-shadow);
+}
+
+.mscm-target-item-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 12px;
+}
+
+.mscm-target-item-store { font-size: 16px; font-weight: 700; color: var(--mscm-dark); }
+
+.mscm-target-item-pct {
+	font-size: 20px;
+	font-weight: 800;
+}
+
+.mscm-target-item-pct.mscm-achieved  { color: #7c3aed; }
+.mscm-target-item-pct.mscm-on-track  { color: var(--mscm-success); }
+.mscm-target-item-pct.mscm-behind    { color: var(--mscm-warning); }
+
+.mscm-progress-bar {
+	height: 10px;
+	background: var(--mscm-gray-light);
+	border-radius: 5px;
+	overflow: hidden;
+	margin: 8px 0;
+}
+
+.mscm-progress-fill {
+	height: 100%;
+	border-radius: 5px;
+	transition: width 0.8s ease;
+}
+
+.mscm-progress-fill          { background: var(--mscm-primary); }
+.mscm-progress-success        { background: var(--mscm-success); }
+.mscm-progress-warning        { background: var(--mscm-warning); }
+.mscm-progress-achieved       { background: #7c3aed; }
+
+.mscm-target-item-details {
+	display: flex;
+	justify-content: space-between;
+	font-size: 13px;
+	color: var(--mscm-gray);
+	margin-top: 8px;
+}
+
+.mscm-achieved { color: #7c3aed; font-weight: 600; }
+
+/* === Pagination === */
+.mscm-pagination {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 16px;
+	margin-top: 24px;
+	font-family: var(--mscm-font);
+	font-size: 14px;
+}
+
+/* === Color Utilities === */
+.mscm-text-danger  { color: var(--mscm-danger); font-weight: 600; }
+.mscm-text-success { color: var(--mscm-success); }
+
+/* === Responsive === */
+@media (max-width: 768px) {
+	.mscm-form-row { grid-template-columns: 1fr; }
+	.mscm-denomination-grid { grid-template-columns: 1fr 1fr; }
+	.mscm-payment-grid { grid-template-columns: 1fr; }
+	.mscm-store-cards { grid-template-columns: 1fr; }
+	.mscm-stats-row { grid-template-columns: 1fr 1fr; }
+	.mscm-denom-row { flex-wrap: wrap; }
+	.mscm-quick-links { flex-direction: column; }
+}
+
+@media (max-width: 480px) {
+	.mscm-stats-row { grid-template-columns: 1fr; }
+	.mscm-denomination-grid { grid-template-columns: 1fr; }
+	.mscm-btn-lg { padding: 12px 20px; font-size: 15px; }
+}
