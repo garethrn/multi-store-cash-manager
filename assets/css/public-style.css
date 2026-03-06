@@ -636,3 +636,30 @@
 	.mscm-denomination-grid { grid-template-columns: 1fr; }
 	.mscm-btn-lg { padding: 12px 20px; font-size: 15px; }
 }
+
+/* === Opening Float Section === */
+.mscm-opening-float-section {
+border-left: 4px solid var(--mscm-primary, #2563eb);
+}
+
+.mscm-opening-float-summary {
+margin-top: 16px;
+}
+
+/* === Store Card Target Progress === */
+.mscm-store-target {
+margin-top: 4px;
+}
+
+.mscm-store-target-progress .mscm-progress-bar {
+height: 8px;
+background: #e5e7eb;
+border-radius: 4px;
+overflow: hidden;
+}
+
+.mscm-store-target-progress .mscm-progress-fill {
+height: 100%;
+border-radius: 4px;
+transition: width 0.3s ease;
+}

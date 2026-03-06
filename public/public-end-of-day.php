@@ -91,6 +91,21 @@ function mscm_end_of_day_shortcode( $atts ) {
 		'denom_10c' => array( 'label' => '10c', 'value' => 0.1 ),
 	);
 
+	// Opening float denomination fields (maps to open_float_denom_* columns).
+	$open_float_denominations = array(
+		'open_float_denom_200' => array( 'label' => 'R200', 'value' => 200 ),
+		'open_float_denom_100' => array( 'label' => 'R100', 'value' => 100 ),
+		'open_float_denom_50'  => array( 'label' => 'R50', 'value' => 50 ),
+		'open_float_denom_20'  => array( 'label' => 'R20', 'value' => 20 ),
+		'open_float_denom_10'  => array( 'label' => 'R10', 'value' => 10 ),
+		'open_float_denom_5'   => array( 'label' => 'R5', 'value' => 5 ),
+		'open_float_denom_2'   => array( 'label' => 'R2', 'value' => 2 ),
+		'open_float_denom_1'   => array( 'label' => 'R1', 'value' => 1 ),
+		'open_float_denom_50c' => array( 'label' => '50c', 'value' => 0.5 ),
+		'open_float_denom_20c' => array( 'label' => '20c', 'value' => 0.2 ),
+		'open_float_denom_10c' => array( 'label' => '10c', 'value' => 0.1 ),
+	);
+
 	// For edit mode, pass existing entry data to JS.
 	$entry_js_data = array();
 	if ( $is_edit_mode && $existing_entry ) {
@@ -128,6 +143,10 @@ function mscm_end_of_day_shortcode( $atts ) {
 		);
 		// Denomination counts.
 		foreach ( $denominations as $field => $denom ) {
+			$entry_js_data[ $field ] = (int) ( $existing_entry->$field ?? 0 );
+		}
+		// Opening float denomination counts.
+		foreach ( $open_float_denominations as $field => $denom ) {
 			$entry_js_data[ $field ] = (int) ( $existing_entry->$field ?? 0 );
 		}
 	}
@@ -191,6 +210,51 @@ function mscm_end_of_day_shortcode( $atts ) {
 							<?php if ( ! $is_edit_mode ) : ?>max="<?php echo esc_attr( $today ); ?>"<?php endif; ?>
 							<?php echo $is_edit_mode ? 'readonly' : ''; ?>
 							required class="mscm-input">
+					</div>
+				</div>
+			</div>
+
+			<!-- Opening Float Check -->
+			<div class="mscm-form-section mscm-opening-float-section">
+				<h3>🏦 <?php esc_html_e( 'Opening Float Check', 'multi-store-cash-manager' ); ?></h3>
+				<p class="mscm-section-desc"><?php esc_html_e( 'Enter the actual denominations of cash in the float at the start of the day. This verifies your opening float is correct.', 'multi-store-cash-manager' ); ?></p>
+				<div class="mscm-denomination-grid">
+					<?php foreach ( $open_float_denominations as $field => $denom ) : ?>
+						<div class="mscm-denom-row">
+							<label class="mscm-denom-label">
+								<span class="mscm-denom-value"><?php echo esc_html( $denom['label'] ); ?></span>
+							</label>
+							<div class="mscm-denom-input-group">
+								<span class="mscm-denom-mult">×</span>
+								<input type="number" name="<?php echo esc_attr( $field ); ?>"
+									id="<?php echo esc_attr( $field ); ?>"
+									class="mscm-input mscm-open-float-count"
+									min="0" value="<?php echo esc_attr( $is_edit_mode ? intval( $existing_entry->$field ?? 0 ) : 0 ); ?>"
+									data-value="<?php echo esc_attr( $denom['value'] ); ?>">
+								<span class="mscm-denom-equals">=</span>
+								<span class="mscm-denom-total" id="<?php echo esc_attr( $field ); ?>_total">
+									<?php echo esc_html( $currency . '0.00' ); ?>
+								</span>
+							</div>
+						</div>
+					<?php endforeach; ?>
+				</div>
+				<div class="mscm-cash-summary mscm-opening-float-summary">
+					<div class="mscm-summary-row mscm-summary-total">
+						<span><?php esc_html_e( 'Opening Float Counted:', 'multi-store-cash-manager' ); ?></span>
+						<span id="mscm-opening-float-total"><?php echo esc_html( $currency . '0.00' ); ?></span>
+					</div>
+					<div class="mscm-summary-row">
+						<span><?php esc_html_e( 'Expected Float:', 'multi-store-cash-manager' ); ?></span>
+						<span id="mscm-expected-float"><?php echo esc_html( $currency . number_format( $default_float, 2 ) ); ?></span>
+					</div>
+					<div class="mscm-summary-row">
+						<span><?php esc_html_e( 'Variance:', 'multi-store-cash-manager' ); ?></span>
+						<span id="mscm-opening-float-variance"><?php echo esc_html( $currency . '0.00' ); ?></span>
+					</div>
+					<div class="mscm-summary-row">
+						<span></span>
+						<span id="mscm-opening-float-status"></span>
 					</div>
 				</div>
 			</div>
@@ -403,8 +467,8 @@ function mscm_end_of_day_shortcode( $atts ) {
 						<span id="mscm-summary-float">- <?php echo esc_html( $currency . '0.00' ); ?></span>
 					</div>
 					<div class="mscm-summary-row" id="mscm-cash-payouts-row" style="display:none;">
-						<span><?php esc_html_e( 'Less Cash Payouts:', 'multi-store-cash-manager' ); ?></span>
-						<span id="mscm-summary-cash-payouts">- <?php echo esc_html( $currency . '0.00' ); ?></span>
+						<span><?php esc_html_e( 'Cash Payouts (included in sales):', 'multi-store-cash-manager' ); ?></span>
+						<span id="mscm-summary-cash-payouts"><?php echo esc_html( $currency . '0.00' ); ?></span>
 					</div>
 					<div class="mscm-summary-row mscm-summary-banking">
 						<span><?php esc_html_e( 'Cash to Bank:', 'multi-store-cash-manager' ); ?></span>

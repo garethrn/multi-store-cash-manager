@@ -113,15 +113,16 @@
 			} );
 			const totalPayouts = totalCashPayouts + totalBankPayouts;
 
-			// Cash payouts come out of the drawer, so they reduce what is banked.
-			const cashToBank = Math.max( 0, totalCash - float - totalCashPayouts );
+			// Denominations represent physical cash in the till after payouts.
+			// Cash to bank = total cash counted minus the float.
+			const cashToBank = Math.max( 0, totalCash - float );
 
 			const creditCard   = parseFloat( $( '#mscm-credit-card' ).val() ) || 0;
 			const eft          = parseFloat( $( '#mscm-eft' ).val() ) || 0;
 			const otherDigital = parseFloat( $( '#mscm-other-digital' ).val() ) || 0;
 
-			// Total sales uses cash-to-bank (float & cash payouts excluded) + other payment types.
-			const totalSales = cashToBank + creditCard + eft + otherDigital;
+			// Total sales adds cash payouts back since POS recorded the sale before payout was made.
+			const totalSales = cashToBank + totalCashPayouts + creditCard + eft + otherDigital;
 
 			// POS total is sum of three POS breakdown fields.
 			const posCash       = parseFloat( $( '#mscm-pos-cash' ).val() ) || 0;
@@ -131,8 +132,8 @@
 			const discrepancy   = totalSales - posReported;
 
 			const totalPurchases = calcDynamicTotal( '.mscm-purchase-amount' );
-			// Net banking: cash_to_bank minus bank-type payouts minus purchases.
-			const netBanking = cashToBank - totalBankPayouts - totalPurchases;
+			// Net banking: cash_to_bank minus bank-type payouts only. Purchases are tracked separately.
+			const netBanking = cashToBank - totalBankPayouts;
 
 			// Update display.
 			$( '#mscm-total-cash' ).text( formatCurrency( totalCash ) );
@@ -141,10 +142,10 @@
 			$( '#mscm-summary-cash' ).text( formatCurrency( totalCash ) );
 			$( '#mscm-summary-float' ).text( '- ' + formatCurrency( float ) );
 
-			// Show/hide cash payouts line.
+			// Show/hide cash payouts info line.
 			if ( totalCashPayouts > 0 ) {
 				$( '#mscm-cash-payouts-row' ).show();
-				$( '#mscm-summary-cash-payouts' ).text( '- ' + formatCurrency( totalCashPayouts ) );
+				$( '#mscm-summary-cash-payouts' ).text( formatCurrency( totalCashPayouts ) );
 			} else {
 				$( '#mscm-cash-payouts-row' ).hide();
 			}
@@ -203,6 +204,51 @@
 
 		// Bind calculation events.
 		$form.on( 'input change', '.mscm-denom-count, #mscm-float, .mscm-payment-input, .mscm-pos-input, .mscm-payout-amount, .mscm-purchase-amount, .mscm-dyn-payment-type', recalculateAll );
+
+		// =========================================================================
+		// Opening Float Check.
+		// =========================================================================
+
+		/**
+		 * Recalculate the opening float totals.
+		 */
+		function recalculateOpeningFloat() {
+			let openingTotal = 0;
+			$( '.mscm-open-float-count' ).each( function () {
+				const count    = parseInt( $( this ).val() ) || 0;
+				const value    = parseFloat( $( this ).data( 'value' ) ) || 0;
+				const subtotal = count * value;
+				const fieldId  = $( this ).attr( 'id' );
+				$( '#' + fieldId + '_total' ).text( formatCurrency( subtotal ) );
+				openingTotal += subtotal;
+			} );
+
+			const expectedFloat = parseFloat( $( '#mscm-float' ).val() ) || floatAmount;
+			const variance      = openingTotal - expectedFloat;
+
+			$( '#mscm-opening-float-total' ).text( formatCurrency( openingTotal ) );
+
+			const $varEl = $( '#mscm-opening-float-variance' );
+			$varEl.text( formatCurrency( Math.abs( variance ) ) );
+			$varEl.removeClass( 'mscm-text-success mscm-text-danger mscm-text-warning' );
+
+			const $statusEl = $( '#mscm-opening-float-status' );
+			if ( openingTotal === 0 ) {
+				$statusEl.text( '' );
+			} else if ( variance === 0 ) {
+				$varEl.addClass( 'mscm-text-success' );
+				$statusEl.text( '✅ Float is correct' ).removeClass( 'mscm-text-danger mscm-text-warning' ).addClass( 'mscm-text-success' );
+			} else if ( variance > 0 ) {
+				$varEl.addClass( 'mscm-text-warning' );
+				$statusEl.text( '⚠️ Float is over by ' + formatCurrency( variance ) ).removeClass( 'mscm-text-success mscm-text-danger' ).addClass( 'mscm-text-warning' );
+			} else {
+				$varEl.addClass( 'mscm-text-danger' );
+				$statusEl.text( '❌ Float is short by ' + formatCurrency( Math.abs( variance ) ) ).removeClass( 'mscm-text-success mscm-text-warning' ).addClass( 'mscm-text-danger' );
+			}
+		}
+
+		$form.on( 'input change', '.mscm-open-float-count, #mscm-float', recalculateOpeningFloat );
+		recalculateOpeningFloat();
 
 		// =========================================================================
 		// Dynamic Rows: Payouts.
@@ -344,6 +390,7 @@
 							$( '.mscm-denom-total' ).text( formatCurrency( 0 ) );
 							$( '#mscm-payouts-container, #mscm-purchases-container' ).empty();
 							recalculateAll();
+							recalculateOpeningFloat();
 						}, 2000 );
 					}
 				} else {
@@ -394,10 +441,24 @@
 			if ( entry.banking_ref ) {
 				$( '#mscm-banking-ref' ).val( entry.banking_ref );
 			}
+
+			// Opening float denomination counts.
+			const openFloatFields = [
+				'open_float_denom_200', 'open_float_denom_100', 'open_float_denom_50',
+				'open_float_denom_20', 'open_float_denom_10', 'open_float_denom_5',
+				'open_float_denom_2', 'open_float_denom_1', 'open_float_denom_50c',
+				'open_float_denom_20c', 'open_float_denom_10c',
+			];
+			openFloatFields.forEach( function ( field ) {
+				if ( entry[ field ] !== undefined ) {
+					$( '#' + field ).val( entry[ field ] );
+				}
+			} );
 		}
 
 		// Initial calculation.
 		recalculateAll();
+		recalculateOpeningFloat();
 	}
 
 	// =========================================================================

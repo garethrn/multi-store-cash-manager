@@ -106,7 +106,7 @@ class MSCM_DB {
 			store_id bigint(20) UNSIGNED NOT NULL,
 			user_id bigint(20) UNSIGNED NOT NULL,
 			entry_date date NOT NULL,
-			-- Cash denominations.
+			-- Cash denominations (end-of-day count).
 			denom_200 int(11) NOT NULL DEFAULT 0,
 			denom_100 int(11) NOT NULL DEFAULT 0,
 			denom_50 int(11) NOT NULL DEFAULT 0,
@@ -118,6 +118,20 @@ class MSCM_DB {
 			denom_50c int(11) NOT NULL DEFAULT 0,
 			denom_20c int(11) NOT NULL DEFAULT 0,
 			denom_10c int(11) NOT NULL DEFAULT 0,
+			-- Opening float denomination counts (start-of-day check).
+			open_float_denom_200 int(11) NOT NULL DEFAULT 0,
+			open_float_denom_100 int(11) NOT NULL DEFAULT 0,
+			open_float_denom_50 int(11) NOT NULL DEFAULT 0,
+			open_float_denom_20 int(11) NOT NULL DEFAULT 0,
+			open_float_denom_10 int(11) NOT NULL DEFAULT 0,
+			open_float_denom_5 int(11) NOT NULL DEFAULT 0,
+			open_float_denom_2 int(11) NOT NULL DEFAULT 0,
+			open_float_denom_1 int(11) NOT NULL DEFAULT 0,
+			open_float_denom_50c int(11) NOT NULL DEFAULT 0,
+			open_float_denom_20c int(11) NOT NULL DEFAULT 0,
+			open_float_denom_10c int(11) NOT NULL DEFAULT 0,
+			opening_float_total decimal(10,2) NOT NULL DEFAULT 0.00,
+			opening_float_variance decimal(10,2) NOT NULL DEFAULT 0.00,
 			-- Totals.
 			total_cash decimal(10,2) NOT NULL DEFAULT 0.00,
 			float_amount decimal(10,2) NOT NULL DEFAULT 500.00,
@@ -546,6 +560,11 @@ class MSCM_DB {
 			'store_id', 'user_id', 'entry_date',
 			'denom_200', 'denom_100', 'denom_50', 'denom_20', 'denom_10',
 			'denom_5', 'denom_2', 'denom_1', 'denom_50c', 'denom_20c', 'denom_10c',
+			'open_float_denom_200', 'open_float_denom_100', 'open_float_denom_50',
+			'open_float_denom_20', 'open_float_denom_10', 'open_float_denom_5',
+			'open_float_denom_2', 'open_float_denom_1', 'open_float_denom_50c',
+			'open_float_denom_20c', 'open_float_denom_10c',
+			'opening_float_total', 'opening_float_variance',
 			'total_cash', 'float_amount', 'cash_to_bank',
 			'credit_card', 'eft', 'other_digital',
 			'total_sales', 'pos_cash', 'pos_eft', 'pos_credit_card', 'pos_reported',
@@ -866,16 +885,27 @@ class MSCM_DB {
 		);
 
 		// Missing entries count.
-		$active_stores = $this->wpdb->get_var(
-			"SELECT COUNT(*) FROM {$this->tables['stores']} WHERE is_active = 1"
-		);
-
-		$submitted_today = $this->wpdb->get_var(
-			$this->wpdb->prepare(
-				"SELECT COUNT(*) FROM {$this->tables['entries']} WHERE entry_date = %s {$store_where}",
-				array_merge( array( $date ), $params )
-			)
-		);
+		if ( $store_id ) {
+			// For a specific store, active_stores is 1; missing if no entry today.
+			$active_stores   = 1;
+			$submitted_today = $this->wpdb->get_var(
+				$this->wpdb->prepare(
+					"SELECT COUNT(*) FROM {$this->tables['entries']} WHERE entry_date = %s AND store_id = %d",
+					$date,
+					absint( $store_id )
+				)
+			);
+		} else {
+			$active_stores = $this->wpdb->get_var(
+				"SELECT COUNT(*) FROM {$this->tables['stores']} WHERE is_active = 1"
+			);
+			$submitted_today = $this->wpdb->get_var(
+				$this->wpdb->prepare(
+					"SELECT COUNT(*) FROM {$this->tables['entries']} WHERE entry_date = %s",
+					$date
+				)
+			);
+		}
 
 		$missing_entries = max( 0, $active_stores - $submitted_today );
 

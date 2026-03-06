@@ -144,6 +144,31 @@ class MSCM_Ajax {
 			$entry_data[ 'denom_' . $denom ] = absint( $_POST[ 'denom_' . $denom ] ?? 0 );
 		}
 
+		// Opening float denomination counts.
+		foreach ( $denoms as $denom ) {
+			$entry_data[ 'open_float_denom_' . $denom ] = absint( $_POST[ 'open_float_denom_' . $denom ] ?? 0 );
+		}
+		$entry_data['open_float_denom_50c'] = absint( $_POST['open_float_denom_50c'] ?? 0 );
+		$entry_data['open_float_denom_20c'] = absint( $_POST['open_float_denom_20c'] ?? 0 );
+		$entry_data['open_float_denom_10c'] = absint( $_POST['open_float_denom_10c'] ?? 0 );
+
+		// Calculate opening float total.
+		$opening_float_total = (
+			( $entry_data['open_float_denom_200'] * 200 ) +
+			( $entry_data['open_float_denom_100'] * 100 ) +
+			( $entry_data['open_float_denom_50']  * 50 ) +
+			( $entry_data['open_float_denom_20']  * 20 ) +
+			( $entry_data['open_float_denom_10']  * 10 ) +
+			( $entry_data['open_float_denom_5']   * 5 ) +
+			( $entry_data['open_float_denom_2']   * 2 ) +
+			( $entry_data['open_float_denom_1']   * 1 ) +
+			( $entry_data['open_float_denom_50c'] * 0.5 ) +
+			( $entry_data['open_float_denom_20c'] * 0.2 ) +
+			( $entry_data['open_float_denom_10c'] * 0.1 )
+		);
+		$entry_data['opening_float_total']    = $opening_float_total;
+		$entry_data['opening_float_variance'] = $opening_float_total - $entry_data['float_amount'];
+
 		// Calculate totals.
 		$total_cash = (
 			( $entry_data['denom_200'] * 200 ) +
@@ -159,7 +184,7 @@ class MSCM_Ajax {
 			( $entry_data['denom_10c'] * 0.1 )
 		);
 
-		// Pre-scan payout payment types so cash payouts can reduce cash_to_bank.
+		// Pre-scan payout payment types to sum cash payouts for inclusion in total sales.
 		$prescan_amounts       = isset( $_POST['payout_amount'] ) ? (array) $_POST['payout_amount'] : array();
 		$prescan_payment_types = isset( $_POST['payout_payment_type'] ) ? (array) $_POST['payout_payment_type'] : array();
 		$prescan_descriptions  = isset( $_POST['payout_description'] ) ? (array) $_POST['payout_description'] : array();
@@ -175,11 +200,12 @@ class MSCM_Ajax {
 		}
 
 		$entry_data['total_cash']   = $total_cash;
-		// Cash payouts come out of the drawer, so they reduce what is banked.
-		$entry_data['cash_to_bank'] = max( 0, $total_cash - $entry_data['float_amount'] - $prescan_cash_payouts );
+		// Denominations represent physical cash in the till after payouts.
+		// Cash to bank = total cash counted minus the float that stays in the till.
+		$entry_data['cash_to_bank'] = max( 0, $total_cash - $entry_data['float_amount'] );
 
-		// Total sales uses cash-to-bank (float & cash payouts excluded) plus other payment methods.
-		$total_sales = $entry_data['cash_to_bank'] + $entry_data['credit_card'] + $entry_data['eft'] + $entry_data['other_digital'];
+		// Total sales includes cash payouts added back (POS recorded the sale before the payout was made).
+		$total_sales = $entry_data['cash_to_bank'] + $prescan_cash_payouts + $entry_data['credit_card'] + $entry_data['eft'] + $entry_data['other_digital'];
 		$entry_data['total_sales'] = $total_sales;
 
 		// POS reported is the sum of the three POS breakdown fields.
@@ -239,9 +265,9 @@ class MSCM_Ajax {
 			);
 		}
 
-		// net_banking: cash_to_bank (already has cash payouts removed) minus bank-type payouts minus purchases.
+		// net_banking: cash_to_bank minus bank-type payouts only. Purchases are tracked separately as expenses.
 		$total_bank_payouts = $total_payouts - $total_cash_payouts;
-		$entry_data['net_banking'] = $entry_data['cash_to_bank'] - $total_bank_payouts - $total_purchases;
+		$entry_data['net_banking'] = $entry_data['cash_to_bank'] - $total_bank_payouts;
 		$entry_data['payouts']     = $payouts;
 		$entry_data['purchases']   = $purchases;
 

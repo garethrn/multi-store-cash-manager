@@ -105,6 +105,31 @@ function mscm_dashboard_shortcode( $atts ) {
 								<span class="mscm-label"><?php esc_html_e( 'MTD:', 'multi-store-cash-manager' ); ?></span>
 								<span class="mscm-value"><?php echo esc_html( $currency . number_format( $store_stats['mtd_sales'], 2 ) ); ?></span>
 							</div>
+							<?php if ( $store_stats['mtd_target'] > 0 ) : ?>
+							<div class="mscm-store-target">
+								<span class="mscm-label"><?php esc_html_e( 'Monthly Target:', 'multi-store-cash-manager' ); ?></span>
+								<span class="mscm-value"><?php echo esc_html( $currency . number_format( $store_stats['mtd_target'], 2 ) ); ?></span>
+							</div>
+							<div class="mscm-store-target-progress" style="margin-top:6px;">
+								<?php
+								$pct = $store_stats['target_progress'];
+								$remaining = max( 0, $store_stats['mtd_target'] - $store_stats['mtd_sales'] );
+								$pct_class = $pct >= 100 ? 'mscm-progress-achieved' : ( $pct >= 50 ? 'mscm-progress-success' : 'mscm-progress-warning' );
+								?>
+								<div class="mscm-progress-bar" style="margin-bottom:4px;">
+									<div class="mscm-progress-fill <?php echo esc_attr( $pct_class ); ?>"
+										style="width:<?php echo esc_attr( min( 100, $pct ) ); ?>%">
+									</div>
+								</div>
+								<span class="mscm-label" style="font-size:12px;">
+									<?php if ( $pct >= 100 ) : ?>
+										🏆 <?php echo esc_html( $pct . '%' ); ?> — <?php esc_html_e( 'Target Achieved!', 'multi-store-cash-manager' ); ?>
+									<?php else : ?>
+										<?php echo esc_html( $pct . '%' ); ?> — <?php echo esc_html( $currency . number_format( $remaining, 2 ) . ' ' ); ?><?php esc_html_e( 'to go', 'multi-store-cash-manager' ); ?>
+									<?php endif; ?>
+								</span>
+							</div>
+							<?php endif; ?>
 						</div>
 						<div class="mscm-store-card-footer">
 							<?php if ( $today_entry ) : ?>
