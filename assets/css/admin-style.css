@@ -1,0 +1,462 @@
+/**
+ * Multi-Store Cash Manager - Admin Styles
+ *
+ * @package MultiStoreCashManager
+ * @version 1.0.0
+ */
+
+/* === CSS Variables === */
+:root {
+	--mscm-primary:   #2563eb;
+	--mscm-primary-light: #dbeafe;
+	--mscm-primary-dark:  #1d4ed8;
+	--mscm-success:   #10b981;
+	--mscm-success-light: #d1fae5;
+	--mscm-warning:   #f59e0b;
+	--mscm-warning-light: #fef3c7;
+	--mscm-danger:    #ef4444;
+	--mscm-danger-light:  #fee2e2;
+	--mscm-info:      #06b6d4;
+	--mscm-info-light: #cffafe;
+	--mscm-dark:      #1f2937;
+	--mscm-gray:      #6b7280;
+	--mscm-gray-light: #f3f4f6;
+	--mscm-light:     #f9fafb;
+	--mscm-white:     #ffffff;
+	--mscm-border:    #e5e7eb;
+	--mscm-radius:    8px;
+	--mscm-shadow:    0 1px 3px rgba(0,0,0,0.1);
+	--mscm-shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+	--mscm-font:      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* === Base === */
+.mscm-admin {
+	font-family: var(--mscm-font);
+	color: var(--mscm-dark);
+	max-width: 1400px;
+}
+
+/* === Stats Grid === */
+.mscm-stats-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 16px;
+	margin: 20px 0;
+}
+
+.mscm-stat-card {
+	background: var(--mscm-white);
+	border-radius: var(--mscm-radius);
+	padding: 20px;
+	box-shadow: var(--mscm-shadow);
+	border-left: 4px solid var(--mscm-primary);
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.mscm-stat-card.mscm-stat-primary  { border-left-color: var(--mscm-primary); }
+.mscm-stat-card.mscm-stat-success  { border-left-color: var(--mscm-success); }
+.mscm-stat-card.mscm-stat-warning  { border-left-color: var(--mscm-warning); }
+.mscm-stat-card.mscm-stat-danger   { border-left-color: var(--mscm-danger); }
+.mscm-stat-card.mscm-stat-info     { border-left-color: var(--mscm-info); }
+
+.mscm-stat-icon {
+	font-size: 24px;
+}
+
+.mscm-stat-value {
+	font-size: 24px;
+	font-weight: 700;
+	color: var(--mscm-dark);
+}
+
+.mscm-stat-label {
+	font-size: 13px;
+	color: var(--mscm-gray);
+	font-weight: 500;
+}
+
+/* === Cards === */
+.mscm-card {
+	background: var(--mscm-white);
+	border-radius: var(--mscm-radius);
+	box-shadow: var(--mscm-shadow);
+	margin-bottom: 20px;
+	overflow: hidden;
+}
+
+.mscm-card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 16px 20px;
+	border-bottom: 1px solid var(--mscm-border);
+	background: var(--mscm-light);
+}
+
+.mscm-card-header h2,
+.mscm-card-header h3 {
+	margin: 0;
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--mscm-dark);
+}
+
+.mscm-card-body {
+	padding: 20px;
+}
+
+.mscm-link {
+	font-size: 13px;
+	color: var(--mscm-primary);
+	text-decoration: none;
+}
+
+.mscm-link:hover {
+	text-decoration: underline;
+}
+
+/* === Grid layouts === */
+.mscm-grid-2 {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 20px;
+	margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+	.mscm-grid-2 { grid-template-columns: 1fr; }
+}
+
+/* === Tables === */
+.mscm-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 13px;
+}
+
+.mscm-table th {
+	background: var(--mscm-light);
+	font-weight: 600;
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	padding: 10px 12px;
+	text-align: left;
+	border-bottom: 2px solid var(--mscm-border);
+	color: var(--mscm-gray);
+}
+
+.mscm-table td {
+	padding: 10px 12px;
+	border-bottom: 1px solid var(--mscm-border);
+	vertical-align: middle;
+}
+
+.mscm-table tr:hover td {
+	background: var(--mscm-light);
+}
+
+.mscm-totals-row td {
+	background: var(--mscm-primary-light) !important;
+	font-weight: 700;
+	border-top: 2px solid var(--mscm-primary);
+}
+
+.mscm-num { text-align: right; }
+
+/* === Badges === */
+.mscm-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 12px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.mscm-badge-pending  { background: var(--mscm-warning-light); color: #92400e; }
+.mscm-badge-verified { background: var(--mscm-success-light); color: #065f46; }
+.mscm-badge-medium   { background: var(--mscm-warning-light); color: #92400e; }
+.mscm-badge-high     { background: var(--mscm-danger-light); color: #991b1b; }
+.mscm-badge-low      { background: var(--mscm-info-light); color: #0e7490; }
+
+/* === Progress Bars === */
+.mscm-progress-bar {
+	height: 8px;
+	background: var(--mscm-gray-light);
+	border-radius: 4px;
+	overflow: hidden;
+	margin: 4px 0;
+}
+
+.mscm-progress-fill {
+	height: 100%;
+	border-radius: 4px;
+	transition: width 0.6s ease;
+	background: var(--mscm-primary);
+}
+
+.mscm-progress-fill.mscm-progress-success { background: var(--mscm-success); }
+.mscm-progress-fill.mscm-progress-warning { background: var(--mscm-warning); }
+.mscm-progress-fill.mscm-progress-achieved { background: #7c3aed; }
+
+.mscm-progress-info {
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 6px;
+	font-size: 13px;
+	font-weight: 500;
+}
+
+/* === Alerts === */
+.mscm-alert {
+	padding: 12px 16px;
+	border-radius: var(--mscm-radius);
+	margin-bottom: 16px;
+	font-size: 13px;
+}
+
+.mscm-alert-success { background: var(--mscm-success-light); color: #065f46; border: 1px solid #a7f3d0; }
+.mscm-alert-warning { background: var(--mscm-warning-light); color: #92400e; border: 1px solid #fde68a; }
+.mscm-alert-danger  { background: var(--mscm-danger-light); color: #991b1b; border: 1px solid #fca5a5; }
+
+/* === Color Utilities === */
+.mscm-positive, .mscm-positive * { color: var(--mscm-success) !important; }
+.mscm-negative, .mscm-negative * { color: var(--mscm-danger) !important; }
+.mscm-warning-text { color: var(--mscm-warning); }
+.mscm-empty { color: var(--mscm-gray); font-style: italic; text-align: center; padding: 20px; }
+
+/* === Filter Bar === */
+.mscm-filter-bar {
+	background: var(--mscm-white);
+	border: 1px solid var(--mscm-border);
+	border-radius: var(--mscm-radius);
+	padding: 16px;
+	margin-bottom: 20px;
+}
+
+.mscm-filter-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.mscm-filter-row select,
+.mscm-filter-row input[type="date"] {
+	border: 1px solid var(--mscm-border);
+	border-radius: 4px;
+	padding: 6px 10px;
+	font-size: 13px;
+	height: 32px;
+}
+
+/* === Forms === */
+.mscm-form-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 16px;
+}
+
+.mscm-form-full {
+	grid-column: 1 / -1;
+}
+
+.mscm-form-group {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.mscm-form-group label {
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--mscm-dark);
+}
+
+.mscm-form-actions {
+	display: flex;
+	gap: 10px;
+	margin-top: 16px;
+	padding-top: 16px;
+	border-top: 1px solid var(--mscm-border);
+}
+
+.mscm-form-inline {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.mscm-form-row {
+	display: flex;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+.mscm-form-row .mscm-form-group {
+	flex: 1;
+	min-width: 150px;
+}
+
+/* === Report Form === */
+.mscm-report-form .mscm-form-row {
+	margin-bottom: 16px;
+}
+
+.mscm-report-meta {
+	font-size: 13px;
+	color: var(--mscm-gray);
+}
+
+/* === Chart Container === */
+.mscm-chart-container {
+	position: relative;
+	height: 200px;
+}
+
+/* === Quick Actions === */
+.mscm-quick-actions {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	gap: 12px;
+}
+
+.mscm-quick-action {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	padding: 16px;
+	background: var(--mscm-light);
+	border: 1px solid var(--mscm-border);
+	border-radius: var(--mscm-radius);
+	text-decoration: none;
+	color: var(--mscm-dark);
+	font-size: 13px;
+	font-weight: 500;
+	transition: all 0.2s;
+	text-align: center;
+}
+
+.mscm-quick-action:hover {
+	background: var(--mscm-primary-light);
+	border-color: var(--mscm-primary);
+	color: var(--mscm-primary);
+	text-decoration: none;
+}
+
+.mscm-qa-icon { font-size: 24px; }
+
+/* === Stores Grid === */
+.mscm-stores-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 16px;
+}
+
+.mscm-store-card {
+	border: 1px solid var(--mscm-border);
+	border-radius: var(--mscm-radius);
+	padding: 16px;
+}
+
+.mscm-store-name { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+.mscm-store-location { color: var(--mscm-gray); font-size: 12px; margin-bottom: 12px; }
+
+.mscm-store-stats {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+}
+
+.mscm-store-stat {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.mscm-store-stat-value { font-weight: 600; font-size: 14px; }
+.mscm-store-stat-label { font-size: 11px; color: var(--mscm-gray); }
+
+/* === Compact Table === */
+.mscm-compact-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mscm-compact-table th { padding: 6px 8px; background: var(--mscm-light); border-bottom: 1px solid var(--mscm-border); font-weight: 600; color: var(--mscm-gray); font-size: 11px; text-transform: uppercase; }
+.mscm-compact-table td { padding: 6px 8px; border-bottom: 1px solid var(--mscm-border); }
+
+/* === Targets === */
+.mscm-target-card {
+	border: 1px solid var(--mscm-border);
+	border-radius: var(--mscm-radius);
+	padding: 16px;
+	margin-bottom: 12px;
+}
+
+.mscm-target-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 8px;
+}
+
+.mscm-target-store-name { font-weight: 600; font-size: 15px; }
+.mscm-target-meta { font-size: 12px; color: var(--mscm-gray); }
+.mscm-target-percent { font-size: 20px; font-weight: 700; }
+.mscm-target-footer { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; }
+
+.mscm-on-track { color: var(--mscm-success); font-weight: 600; }
+.mscm-off-track { color: var(--mscm-warning); font-weight: 600; }
+
+/* === Progress Container === */
+.mscm-progress-container {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.mscm-progress-sm { height: 6px; flex: 1; margin: 0; }
+
+/* === Settings === */
+.mscm-settings-section {
+	background: var(--mscm-white);
+	border: 1px solid var(--mscm-border);
+	border-radius: var(--mscm-radius);
+	padding: 20px;
+	margin-bottom: 20px;
+}
+
+.mscm-settings-section h2 {
+	margin: 0 0 16px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid var(--mscm-border);
+	font-size: 15px;
+}
+
+/* === Tabs === */
+.mscm-tabs {
+	margin-bottom: 20px;
+}
+
+/* === Reports === */
+.mscm-report-stats {
+	margin-bottom: 16px;
+}
+
+/* === Responsive === */
+@media screen and (max-width: 782px) {
+	.mscm-stats-grid { grid-template-columns: 1fr 1fr; }
+	.mscm-form-grid  { grid-template-columns: 1fr; }
+	.mscm-filter-row { flex-direction: column; align-items: flex-start; }
+}
+
+/* === Print Styles === */
+@media print {
+	.mscm-stats-grid { grid-template-columns: repeat(4, 1fr); }
+	.mscm-card { box-shadow: none; border: 1px solid #ccc; }
+	.button, .mscm-quick-actions, .mscm-filter-bar { display: none !important; }
+}
