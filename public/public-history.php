@@ -43,6 +43,32 @@ function mscm_history_shortcode( $atts ) {
 	$currency = get_option( 'mscm_currency', 'R' );
 	$limit    = absint( $atts['limit'] );
 	$paged    = max( 1, absint( $_GET['mscm_page'] ?? 1 ) );
+	$can_edit = current_user_can( 'mscm_verify_entry' ) || current_user_can( 'manage_options' );
+
+	// Determine the EOD form page URL for edit links.
+	$eod_page_url = '';
+	if ( $can_edit ) {
+		// Try to find a page with the [mscm_end_of_day] shortcode.
+		$eod_pages = get_posts( array(
+			'post_type'      => 'page',
+			'posts_per_page' => 1,
+			's'              => 'mscm_end_of_day',
+			'post_status'    => 'publish',
+		) );
+		// Also search content directly.
+		global $wpdb;
+		$eod_page_row = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT ID FROM {$wpdb->posts} WHERE post_status = %s AND post_type = %s AND post_content LIKE %s LIMIT 1",
+				'publish',
+				'page',
+				'%mscm_end_of_day%'
+			)
+		);
+		if ( $eod_page_row ) {
+			$eod_page_url = get_permalink( $eod_page_row->ID );
+		}
+	}
 
 	$args = array(
 		'limit'  => $limit,
@@ -85,6 +111,9 @@ function mscm_history_shortcode( $atts ) {
 							<th><?php esc_html_e( 'Card', 'multi-store-cash-manager' ); ?></th>
 							<th><?php esc_html_e( 'Discrepancy', 'multi-store-cash-manager' ); ?></th>
 							<th><?php esc_html_e( 'Status', 'multi-store-cash-manager' ); ?></th>
+							<?php if ( $can_edit && $eod_page_url ) : ?>
+							<th><?php esc_html_e( 'Actions', 'multi-store-cash-manager' ); ?></th>
+							<?php endif; ?>
 						</tr>
 					</thead>
 					<tbody>
@@ -103,6 +132,14 @@ function mscm_history_shortcode( $atts ) {
 										<?php echo esc_html( ucfirst( $entry->status ) ); ?>
 									</span>
 								</td>
+								<?php if ( $can_edit && $eod_page_url ) : ?>
+								<td>
+									<a href="<?php echo esc_url( add_query_arg( 'edit_entry', $entry->id, $eod_page_url ) ); ?>"
+										class="mscm-btn mscm-btn-sm mscm-btn-outline">
+										✏️ <?php esc_html_e( 'Edit', 'multi-store-cash-manager' ); ?>
+									</a>
+								</td>
+								<?php endif; ?>
 							</tr>
 						<?php endforeach; ?>
 					</tbody>

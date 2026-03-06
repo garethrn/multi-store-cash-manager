@@ -299,6 +299,7 @@ class MSCM_Reports {
 					s.id as store_id,
 					s.name as store_name,
 					t.target_amount,
+					t.working_days,
 					t.period_type,
 					COALESCE(SUM(e.total_sales), 0) as actual_sales,
 					COALESCE(COUNT(e.id), 0) as days_with_entries
@@ -309,39 +310,61 @@ class MSCM_Reports {
 				LEFT JOIN {$entries} e ON s.id = e.store_id
 					AND e.entry_date BETWEEN %s AND %s
 				WHERE s.is_active = 1 {$where_store}
-				GROUP BY s.id, s.name, t.target_amount, t.period_type
+				GROUP BY s.id, s.name, t.target_amount, t.working_days, t.period_type
 				ORDER BY s.name ASC",
 				array( $year, $month, $date_from, $date_to )
 			)
 		);
 
+		// Calculate calendar-day progress for this month period.
+		$calendar_days_in_month = (int) wp_date( 't', strtotime( $date_from ) );
+		$days_elapsed           = (int) wp_date( 'j', strtotime( $date_to ) );
+
 		$report_rows = array();
 		foreach ( $results as $row ) {
-			$target  = floatval( $row->target_amount ?? 0 );
-			$actual  = floatval( $row->actual_sales );
-			$percent = $target > 0 ? round( ( $actual / $target ) * 100, 1 ) : 0;
+			$target       = floatval( $row->target_amount ?? 0 );
+			$actual       = floatval( $row->actual_sales );
+			$working_days = absint( $row->working_days ?? 0 );
+			$percent      = $target > 0 ? round( ( $actual / $target ) * 100, 1 ) : 0;
+
+			// Working-days daily target and target-to-date.
+			$target_per_day  = ( $target > 0 && $working_days > 0 ) ? round( $target / $working_days, 2 ) : 0;
+
+			// Estimate elapsed working days proportionally to calendar days.
+			$elapsed_working = ( $working_days > 0 && $calendar_days_in_month > 0 )
+				? min( $working_days, round( $days_elapsed * $working_days / $calendar_days_in_month ) )
+				: 0;
+
+			$target_to_date = round( $target_per_day * $elapsed_working, 2 );
+			$over_short     = round( $actual - $target_to_date, 2 );
 
 			$report_rows[] = array(
-				'store_id'    => $row->store_id,
-				'store_name'  => $row->store_name,
-				'target'      => $target,
-				'actual'      => $actual,
-				'remaining'   => max( 0, $target - $actual ),
-				'percentage'  => $percent,
-				'on_track'    => $percent >= $this->get_expected_progress_percentage( $date_from, $date_to ),
+				'store_id'       => $row->store_id,
+				'store_name'     => $row->store_name,
+				'target'         => $target,
+				'actual'         => $actual,
+				'remaining'      => max( 0, $target - $actual ),
+				'percentage'     => $percent,
+				'on_track'       => $percent >= $this->get_expected_progress_percentage( $date_from, $date_to ),
+				'working_days'   => $working_days,
+				'target_per_day' => $target_per_day,
+				'target_to_date' => $target_to_date,
+				'over_short'     => $over_short,
 			);
 		}
 
 		return array(
-			'type'        => 'targets',
-			'title'       => __( 'Sales Target Progress Report', 'multi-store-cash-manager' ),
-			'date_from'   => $date_from,
-			'date_to'     => $date_to,
-			'year'        => $year,
-			'month'       => $month,
-			'rows'        => $report_rows,
-			'generated_at' => current_time( 'mysql' ),
-			'generated_by' => wp_get_current_user()->display_name,
+			'type'             => 'targets',
+			'title'            => __( 'Sales Target Progress Report', 'multi-store-cash-manager' ),
+			'date_from'        => $date_from,
+			'date_to'          => $date_to,
+			'year'             => $year,
+			'month'            => $month,
+			'days_elapsed'     => $days_elapsed,
+			'calendar_days'    => $calendar_days_in_month,
+			'rows'             => $report_rows,
+			'generated_at'     => current_time( 'mysql' ),
+			'generated_by'     => wp_get_current_user()->display_name,
 		);
 	}
 

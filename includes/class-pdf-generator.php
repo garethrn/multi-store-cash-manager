@@ -85,8 +85,9 @@ class MSCM_PDF_Generator {
 		.positive { color: #10b981; }
 		.signature-section { margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
 		.signature-line { border-top: 1px solid #333; padding-top: 5px; margin-top: 40px; font-size: 11px; }
+		@page { size: A4; margin: 15mm; }
 		@media print {
-			body { padding: 10px; }
+			body { padding: 0; }
 			.no-print { display: none; }
 			button { display: none; }
 		}
@@ -266,9 +267,12 @@ class MSCM_PDF_Generator {
 			<thead>
 				<tr>
 					<th><?php esc_html_e( 'Store', 'multi-store-cash-manager' ); ?></th>
-					<th class="text-right"><?php esc_html_e( 'Target', 'multi-store-cash-manager' ); ?></th>
-					<th class="text-right"><?php esc_html_e( 'Actual', 'multi-store-cash-manager' ); ?></th>
-					<th class="text-right"><?php esc_html_e( 'Remaining', 'multi-store-cash-manager' ); ?></th>
+					<th class="text-right"><?php esc_html_e( 'Monthly Target', 'multi-store-cash-manager' ); ?></th>
+					<th class="text-right"><?php esc_html_e( 'Working Days', 'multi-store-cash-manager' ); ?></th>
+					<th class="text-right"><?php esc_html_e( 'Daily Target', 'multi-store-cash-manager' ); ?></th>
+					<th class="text-right"><?php esc_html_e( 'Target to Date', 'multi-store-cash-manager' ); ?></th>
+					<th class="text-right"><?php esc_html_e( 'Actual Sales', 'multi-store-cash-manager' ); ?></th>
+					<th class="text-right"><?php esc_html_e( 'Over / Short', 'multi-store-cash-manager' ); ?></th>
 					<th class="text-right"><?php esc_html_e( 'Progress', 'multi-store-cash-manager' ); ?></th>
 				</tr>
 			</thead>
@@ -277,8 +281,19 @@ class MSCM_PDF_Generator {
 					<tr>
 						<td><?php echo esc_html( $row['store_name'] ); ?></td>
 						<td class="text-right"><?php echo esc_html( $currency . number_format( $row['target'], 2 ) ); ?></td>
+						<td class="text-right"><?php echo esc_html( $row['working_days'] > 0 ? $row['working_days'] : '—' ); ?></td>
+						<td class="text-right"><?php echo esc_html( $row['target_per_day'] > 0 ? $currency . number_format( $row['target_per_day'], 2 ) : '—' ); ?></td>
+						<td class="text-right"><?php echo esc_html( $row['target_to_date'] > 0 ? $currency . number_format( $row['target_to_date'], 2 ) : '—' ); ?></td>
 						<td class="text-right"><?php echo esc_html( $currency . number_format( $row['actual'], 2 ) ); ?></td>
-						<td class="text-right"><?php echo esc_html( $currency . number_format( $row['remaining'], 2 ) ); ?></td>
+						<td class="text-right <?php echo isset( $row['over_short'] ) ? ( $row['over_short'] >= 0 ? 'positive' : 'negative' ) : ''; ?>">
+							<?php
+							if ( isset( $row['over_short'] ) ) {
+								echo esc_html( ( $row['over_short'] >= 0 ? '▲ ' : '▼ ' ) . $currency . number_format( abs( $row['over_short'] ), 2 ) );
+							} else {
+								echo '—';
+							}
+							?>
+						</td>
 						<td class="text-right <?php echo $row['on_track'] ? 'positive' : 'negative'; ?>">
 							<?php echo esc_html( $row['percentage'] . '%' ); ?>
 						</td>
@@ -287,5 +302,15 @@ class MSCM_PDF_Generator {
 			</tbody>
 		</table>
 		<?php
+		if ( ! empty( $report['days_elapsed'] ) && ! empty( $report['calendar_days'] ) ) {
+			echo '<p style="font-size:11px;color:#666;margin-top:5px;">';
+			echo esc_html( sprintf(
+				/* translators: 1: days elapsed, 2: calendar days */
+				__( 'Period: Day %1$d of %2$d calendar days', 'multi-store-cash-manager' ),
+				$report['days_elapsed'],
+				$report['calendar_days']
+			) );
+			echo '</p>';
+		}
 	}
 }

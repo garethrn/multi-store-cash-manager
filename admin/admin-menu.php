@@ -215,6 +215,28 @@ function mscm_admin_entries_page() {
 									data-entry-id="<?php echo esc_attr( $entry->id ); ?>">
 									<?php esc_html_e( 'View', 'multi-store-cash-manager' ); ?>
 								</a>
+								<?php
+								// Find the public EOD page for the edit link.
+								global $wpdb;
+								static $eod_edit_page_url = null;
+								if ( null === $eod_edit_page_url ) {
+									$eod_page_row = $wpdb->get_row(
+										$wpdb->prepare(
+											"SELECT ID FROM {$wpdb->posts} WHERE post_status = %s AND post_type = %s AND post_content LIKE %s LIMIT 1",
+											'publish',
+											'page',
+											'%mscm_end_of_day%'
+										)
+									);
+									$eod_edit_page_url = $eod_page_row ? get_permalink( $eod_page_row->ID ) : '';
+								}
+								if ( $eod_edit_page_url && ( current_user_can( 'mscm_verify_entry' ) || current_user_can( 'manage_options' ) ) ) :
+								?>
+								<a href="<?php echo esc_url( add_query_arg( 'edit_entry', $entry->id, $eod_edit_page_url ) ); ?>"
+									class="button button-small">
+									✏️ <?php esc_html_e( 'Edit', 'multi-store-cash-manager' ); ?>
+								</a>
+								<?php endif; ?>
 							</td>
 						</tr>
 					<?php endforeach; ?>

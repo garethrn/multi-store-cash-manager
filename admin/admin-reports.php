@@ -366,9 +366,12 @@ function mscm_render_targets_report_table( $report, $currency ) {
 		<thead>
 			<tr>
 				<th><?php esc_html_e( 'Store', 'multi-store-cash-manager' ); ?></th>
-				<th class="mscm-num"><?php esc_html_e( 'Target', 'multi-store-cash-manager' ); ?></th>
+				<th class="mscm-num"><?php esc_html_e( 'Monthly Target', 'multi-store-cash-manager' ); ?></th>
+				<th class="mscm-num"><?php esc_html_e( 'Working Days', 'multi-store-cash-manager' ); ?></th>
+				<th class="mscm-num"><?php esc_html_e( 'Daily Target', 'multi-store-cash-manager' ); ?></th>
+				<th class="mscm-num"><?php esc_html_e( 'Target to Date', 'multi-store-cash-manager' ); ?></th>
 				<th class="mscm-num"><?php esc_html_e( 'Actual Sales', 'multi-store-cash-manager' ); ?></th>
-				<th class="mscm-num"><?php esc_html_e( 'Remaining', 'multi-store-cash-manager' ); ?></th>
+				<th class="mscm-num"><?php esc_html_e( 'Over / Short', 'multi-store-cash-manager' ); ?></th>
 				<th><?php esc_html_e( 'Progress', 'multi-store-cash-manager' ); ?></th>
 			</tr>
 		</thead>
@@ -377,8 +380,19 @@ function mscm_render_targets_report_table( $report, $currency ) {
 				<tr>
 					<td><strong><?php echo esc_html( $row['store_name'] ); ?></strong></td>
 					<td class="mscm-num"><?php echo esc_html( $currency . number_format( $row['target'], 2 ) ); ?></td>
+					<td class="mscm-num"><?php echo esc_html( $row['working_days'] > 0 ? $row['working_days'] : '—' ); ?></td>
+					<td class="mscm-num"><?php echo esc_html( $row['target_per_day'] > 0 ? $currency . number_format( $row['target_per_day'], 2 ) : '—' ); ?></td>
+					<td class="mscm-num"><?php echo esc_html( $row['target_to_date'] > 0 ? $currency . number_format( $row['target_to_date'], 2 ) : '—' ); ?></td>
 					<td class="mscm-num"><?php echo esc_html( $currency . number_format( $row['actual'], 2 ) ); ?></td>
-					<td class="mscm-num"><?php echo esc_html( $currency . number_format( $row['remaining'], 2 ) ); ?></td>
+					<td class="mscm-num <?php echo isset( $row['over_short'] ) && $row['over_short'] >= 0 ? 'mscm-positive' : 'mscm-negative'; ?>">
+						<?php
+						if ( isset( $row['over_short'] ) ) {
+							echo esc_html( ( $row['over_short'] >= 0 ? '▲ ' : '▼ ' ) . $currency . number_format( abs( $row['over_short'] ), 2 ) );
+						} else {
+							echo '—';
+						}
+						?>
+					</td>
 					<td>
 						<div class="mscm-progress-container">
 							<div class="mscm-progress-bar mscm-progress-sm">

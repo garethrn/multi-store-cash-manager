@@ -93,7 +93,11 @@ class MSCM_Ajax {
 			return;
 		}
 
-		if ( ! current_user_can( 'mscm_submit_entry' ) ) {
+		$is_edit    = ! empty( $_POST['entry_id'] );
+		$can_submit = current_user_can( 'mscm_submit_entry' );
+		$can_edit   = current_user_can( 'mscm_verify_entry' ) || current_user_can( 'manage_options' );
+
+		if ( ! $can_submit && ! ( $is_edit && $can_edit ) ) {
 			$this->error( __( 'Permission denied.', 'multi-store-cash-manager' ), 403 );
 			return;
 		}
@@ -150,31 +154,58 @@ class MSCM_Ajax {
 			( $entry_data['denom_10c'] * 0.1 )
 		);
 
-		$entry_data['total_cash']   = $total_cash;
-		$entry_data['cash_to_bank'] = max( 0, $total_cash - $entry_data['float_amount'] );
+		// Pre-scan payout payment types so cash payouts can reduce cash_to_bank.
+		$prescan_amounts       = isset( $_POST['payout_amount'] ) ? (array) $_POST['payout_amount'] : array();
+		$prescan_payment_types = isset( $_POST['payout_payment_type'] ) ? (array) $_POST['payout_payment_type'] : array();
+		$prescan_descriptions  = isset( $_POST['payout_description'] ) ? (array) $_POST['payout_description'] : array();
+		$prescan_cash_payouts  = 0;
+		foreach ( $prescan_descriptions as $i => $desc ) {
+			if ( empty( $desc ) || ! isset( $prescan_amounts[ $i ] ) ) {
+				continue;
+			}
+			$pt = $prescan_payment_types[ $i ] ?? 'cash';
+			if ( 'cash' === $pt ) {
+				$prescan_cash_payouts += floatval( $prescan_amounts[ $i ] );
+			}
+		}
 
-		// Total sales uses cash-to-bank (float excluded) plus other payment methods.
+		$entry_data['total_cash']   = $total_cash;
+		// Cash payouts come out of the drawer, so they reduce what is banked.
+		$entry_data['cash_to_bank'] = max( 0, $total_cash - $entry_data['float_amount'] - $prescan_cash_payouts );
+
+		// Total sales uses cash-to-bank (float & cash payouts excluded) plus other payment methods.
 		$total_sales = $entry_data['cash_to_bank'] + $entry_data['credit_card'] + $entry_data['eft'] + $entry_data['other_digital'];
 		$entry_data['total_sales'] = $total_sales;
 		$entry_data['discrepancy'] = $total_sales - $entry_data['pos_reported'];
 
 		// Parse payouts.
 		$payouts   = array();
-		$payout_descriptions = isset( $_POST['payout_description'] ) ? (array) $_POST['payout_description'] : array();
-		$payout_amounts      = isset( $_POST['payout_amount'] ) ? (array) $_POST['payout_amount'] : array();
-		$payout_categories   = isset( $_POST['payout_category'] ) ? (array) $_POST['payout_category'] : array();
+		$payout_descriptions  = isset( $_POST['payout_description'] ) ? (array) $_POST['payout_description'] : array();
+		$payout_amounts       = isset( $_POST['payout_amount'] ) ? (array) $_POST['payout_amount'] : array();
+		$payout_categories    = isset( $_POST['payout_category'] ) ? (array) $_POST['payout_category'] : array();
+		$payout_payment_types = isset( $_POST['payout_payment_type'] ) ? (array) $_POST['payout_payment_type'] : array();
 
-		$total_payouts = 0;
+		$total_payouts      = 0;
+		$total_cash_payouts = 0;
 		foreach ( $payout_descriptions as $i => $desc ) {
 			if ( empty( $desc ) || ! isset( $payout_amounts[ $i ] ) ) {
 				continue;
 			}
-			$amount          = floatval( $payout_amounts[ $i ] );
-			$total_payouts  += $amount;
-			$payouts[]       = array(
-				'description' => sanitize_text_field( wp_unslash( $desc ) ),
-				'amount'      => $amount,
-				'category'    => sanitize_text_field( wp_unslash( $payout_categories[ $i ] ?? 'general' ) ),
+			$amount       = floatval( $payout_amounts[ $i ] );
+			$payment_type = in_array( $payout_payment_types[ $i ] ?? 'cash', array( 'cash', 'bank' ), true )
+				? $payout_payment_types[ $i ]
+				: 'cash';
+
+			$total_payouts += $amount;
+			if ( 'cash' === $payment_type ) {
+				$total_cash_payouts += $amount;
+			}
+
+			$payouts[] = array(
+				'description'  => sanitize_text_field( wp_unslash( $desc ) ),
+				'amount'       => $amount,
+				'category'     => sanitize_text_field( wp_unslash( $payout_categories[ $i ] ?? 'general' ) ),
+				'payment_type' => $payment_type,
 			);
 		}
 
@@ -200,7 +231,9 @@ class MSCM_Ajax {
 			);
 		}
 
-		$entry_data['net_banking'] = $entry_data['cash_to_bank'] - $total_payouts - $total_purchases;
+		// net_banking: cash_to_bank (already has cash payouts removed) minus bank-type payouts minus purchases.
+		$total_bank_payouts = $total_payouts - $total_cash_payouts;
+		$entry_data['net_banking'] = $entry_data['cash_to_bank'] - $total_bank_payouts - $total_purchases;
 		$entry_data['payouts']     = $payouts;
 		$entry_data['purchases']   = $purchases;
 
@@ -539,6 +572,7 @@ class MSCM_Ajax {
 			'period_month'   => absint( $_POST['period_month'] ?? wp_date( 'n' ) ),
 			'period_quarter' => absint( $_POST['period_quarter'] ?? 0 ),
 			'target_amount'  => floatval( $_POST['target_amount'] ?? 0 ),
+			'working_days'   => absint( $_POST['working_days'] ?? 0 ),
 			'notes'          => sanitize_textarea_field( wp_unslash( $_POST['notes'] ?? '' ) ),
 			'created_by'     => get_current_user_id(),
 		);

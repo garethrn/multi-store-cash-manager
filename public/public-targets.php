@@ -64,18 +64,37 @@ function mscm_targets_shortcode( $atts ) {
 	ob_start();
 	?>
 	<div class="mscm-targets-wrapper">
-		<h2 class="mscm-section-title">
-			<?php
-			echo esc_html(
-				sprintf(
-					/* translators: 1: month name, 2: year */
-					__( '%1$s %2$s — Sales Targets', 'multi-store-cash-manager' ),
-					$month_names[ $month ] ?? '',
-					$year
-				)
-			);
-			?>
-		</h2>
+		<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+			<h2 class="mscm-section-title" style="margin:0;">
+				<?php
+				echo esc_html(
+					sprintf(
+						/* translators: 1: month name, 2: year */
+						__( '%1$s %2$s — Sales Targets', 'multi-store-cash-manager' ),
+						$month_names[ $month ] ?? '',
+						$year
+					)
+				);
+				?>
+			</h2>
+			<?php if ( current_user_can( 'mscm_view_reports' ) || current_user_can( 'manage_options' ) ) : ?>
+			<a href="<?php echo esc_url( wp_nonce_url(
+				add_query_arg(
+					array(
+						'action'    => 'mscm_print_report',
+						'type'      => 'targets',
+						'store_id'  => 0,
+						'date_from' => $month_start,
+						'date_to'   => $period_end,
+					),
+					admin_url( 'admin-post.php' )
+				),
+				'mscm_print_report'
+			) ); ?>" target="_blank" class="mscm-btn mscm-btn-outline mscm-btn-sm">
+				🖨️ <?php esc_html_e( 'Print to PDF', 'multi-store-cash-manager' ); ?>
+			</a>
+			<?php endif; ?>
+		</div>
 
 		<?php if ( empty( $rows ) ) : ?>
 			<div class="mscm-notice">
@@ -118,6 +137,42 @@ function mscm_targets_shortcode( $atts ) {
 							<span class="mscm-achieved">🎉 <?php esc_html_e( 'Target Achieved!', 'multi-store-cash-manager' ); ?></span>
 						<?php endif; ?>
 					</div>
+					<?php if ( $row['working_days'] > 0 ) : ?>
+					<div class="mscm-target-working-days" style="margin-top:8px;font-size:13px;color:#6b7280;display:grid;grid-template-columns:repeat(2,1fr);gap:4px;">
+						<span>📅 <?php echo esc_html( sprintf(
+							/* translators: 1: working days */
+							__( 'Working Days: %d', 'multi-store-cash-manager' ),
+							$row['working_days']
+						) ); ?></span>
+						<span>📊 <?php echo esc_html( sprintf(
+							/* translators: 1: daily target amount */
+							__( 'Daily Target: %s', 'multi-store-cash-manager' ),
+							$currency . number_format( $row['target_per_day'], 2 )
+						) ); ?></span>
+						<span>🎯 <?php echo esc_html( sprintf(
+							/* translators: 1: target to date amount */
+							__( 'Target to Date: %s', 'multi-store-cash-manager' ),
+							$currency . number_format( $row['target_to_date'], 2 )
+						) ); ?></span>
+						<span style="font-weight:600;<?php echo $row['over_short'] >= 0 ? 'color:#10b981;' : 'color:#ef4444;'; ?>">
+							<?php
+							if ( $row['over_short'] >= 0 ) {
+								echo esc_html( sprintf(
+									/* translators: 1: over amount */
+									__( '▲ %s Over Target', 'multi-store-cash-manager' ),
+									$currency . number_format( $row['over_short'], 2 )
+								) );
+							} else {
+								echo esc_html( sprintf(
+									/* translators: 1: short amount */
+									__( '▼ %s Short of Target', 'multi-store-cash-manager' ),
+									$currency . number_format( abs( $row['over_short'] ), 2 )
+								) );
+							}
+							?>
+						</span>
+					</div>
+					<?php endif; ?>
 				</div>
 			<?php endforeach; ?>
 		<?php endif; ?>
