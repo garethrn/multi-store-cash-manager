@@ -471,6 +471,10 @@ function mscm_end_of_day_shortcode( $atts ) {
 						<span><?php esc_html_e( 'EFT:', 'multi-store-cash-manager' ); ?></span>
 						<span id="mscm-summary-eft"><?php echo esc_html( $currency . '0.00' ); ?></span>
 					</div>
+					<div class="mscm-summary-row" id="mscm-other-digital-row" style="display:none;">
+						<span><?php esc_html_e( 'Other Digital:', 'multi-store-cash-manager' ); ?></span>
+						<span id="mscm-summary-other-digital"><?php echo esc_html( $currency . '0.00' ); ?></span>
+					</div>
 					<div class="mscm-summary-row mscm-summary-total">
 						<span><?php esc_html_e( 'Total Sales:', 'multi-store-cash-manager' ); ?></span>
 						<span id="mscm-total-sales"><?php echo esc_html( $currency . '0.00' ); ?></span>
@@ -481,16 +485,20 @@ function mscm_end_of_day_shortcode( $atts ) {
 					<!-- POS comparison -->
 					<div class="mscm-summary-row mscm-discrepancy-row">
 						<span><?php esc_html_e( 'Discrepancy (vs POS):', 'multi-store-cash-manager' ); ?></span>
-						<span id="mscm-discrepancy"><?php echo esc_html( $currency . '0.00' ); ?></span>
+						<span id="mscm-discrepancy">—</span>
 					</div>
-					<div class="mscm-summary-row" id="mscm-discrepancy-status-row" style="display:none;">
+					<div class="mscm-summary-row" id="mscm-discrepancy-status-row">
 						<span></span>
-						<span id="mscm-discrepancy-status" class="mscm-discrepancy-label"></span>
+						<span id="mscm-discrepancy-status" class="mscm-discrepancy-label mscm-text-warning"><?php esc_html_e( 'Enter POS totals above to calculate discrepancy', 'multi-store-cash-manager' ); ?></span>
 					</div>
 
 					<div class="mscm-summary-divider"></div>
 
 					<!-- Net banking -->
+					<div class="mscm-summary-row" id="mscm-bank-payouts-row" style="display:none;">
+						<span><?php esc_html_e( 'Less Bank Payouts:', 'multi-store-cash-manager' ); ?></span>
+						<span id="mscm-summary-bank-payouts"><?php echo esc_html( '- ' . $currency . '0.00' ); ?></span>
+					</div>
 					<div class="mscm-summary-row mscm-summary-net">
 						<span><?php esc_html_e( 'Net Banking:', 'multi-store-cash-manager' ); ?></span>
 						<span id="mscm-net-banking"><?php echo esc_html( $currency . '0.00' ); ?></span>

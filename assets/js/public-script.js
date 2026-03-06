@@ -86,15 +86,14 @@
 		function recalculateAll() {
 			let totalCash = 0;
 
-			// Calculate denomination totals.
+			// Calculate denomination totals using DOM traversal (robust, no ID dependency).
 			$( '.mscm-denom-count' ).each( function () {
-				const $input  = $( this );
-				const count   = parseInt( $input.val() ) || 0;
-				const value   = parseFloat( $input.data( 'value' ) ) || 0;
+				const $input   = $( this );
+				const count    = parseInt( $input.val() ) || 0;
+				const value    = parseFloat( $input.attr( 'data-value' ) ) || 0;
 				const subtotal = count * value;
-				const fieldId  = $input.attr( 'id' );
 
-				$( '#' + fieldId + '_total' ).text( formatCurrency( subtotal ) );
+				$input.closest( '.mscm-denom-input-group' ).find( '.mscm-denom-total' ).text( formatCurrency( subtotal ) );
 				totalCash += subtotal;
 			} );
 
@@ -151,42 +150,72 @@
 				$( '#mscm-cash-payouts-row' ).hide();
 			}
 
+			// Show/hide other digital line.
+			if ( otherDigital > 0 ) {
+				$( '#mscm-other-digital-row' ).show();
+				$( '#mscm-summary-other-digital' ).text( formatCurrency( otherDigital ) );
+			} else {
+				$( '#mscm-other-digital-row' ).hide();
+			}
+
 			$( '#mscm-summary-card' ).text( formatCurrency( creditCard ) );
 			$( '#mscm-summary-eft' ).text( formatCurrency( eft ) );
 			$( '#mscm-total-sales' ).text( formatCurrency( totalSales ) );
 			$( '#mscm-summary-banking' ).text( formatCurrency( cashToBank ) );
 			$( '#mscm-total-payouts' ).text( formatCurrency( totalPayouts ) );
 			$( '#mscm-total-purchases' ).text( formatCurrency( totalPurchases ) );
-			$( '#mscm-net-banking' ).text( formatCurrency( netBanking ) );
 			$( '#mscm-pos-total' ).text( formatCurrency( posReported ) );
 
-			// Discrepancy with color and shortage/over label.
+			// Show/hide bank payouts line in net banking section.
+			if ( totalBankPayouts > 0 ) {
+				$( '#mscm-bank-payouts-row' ).show();
+				$( '#mscm-summary-bank-payouts' ).text( '- ' + formatCurrency( totalBankPayouts ) );
+			} else {
+				$( '#mscm-bank-payouts-row' ).hide();
+			}
+
+			$( '#mscm-net-banking' ).text( formatCurrency( netBanking ) );
+
+			// Discrepancy: only meaningful when POS figures have been entered.
+			const $discRow    = $( '#mscm-discrepancy-row' );
 			const $discEl     = $( '#mscm-discrepancy' );
 			const $statusRow  = $( '#mscm-discrepancy-status-row' );
 			const $statusEl   = $( '#mscm-discrepancy-status' );
 
-			$discEl.text( formatCurrency( discrepancy ) );
 			$discEl.removeClass( 'mscm-text-danger mscm-text-success mscm-text-warning' );
 
-			let statusText  = '';
-			let statusClass = '';
-
-			if ( discrepancy < 0 ) {
-				statusText  = 'Shortage of ' + formatCurrency( Math.abs( discrepancy ) );
-				statusClass = 'mscm-text-danger';
-				$discEl.addClass( 'mscm-text-danger' );
-			} else if ( discrepancy > 0 ) {
-				statusText  = 'Over by ' + formatCurrency( discrepancy );
-				statusClass = 'mscm-text-warning';
-				$discEl.addClass( 'mscm-text-warning' );
+			if ( posReported === 0 ) {
+				// No POS figures yet — show a neutral placeholder.
+				$discEl.text( '—' ).addClass( 'mscm-text-warning' );
+				$statusEl.text( 'Enter POS totals above to calculate discrepancy' )
+					.removeClass( 'mscm-text-danger mscm-text-warning mscm-text-success' )
+					.addClass( 'mscm-text-warning' );
+				$statusRow.show();
 			} else {
-				statusText  = 'Balanced';
-				statusClass = 'mscm-text-success';
-				$discEl.addClass( 'mscm-text-success' );
-			}
+				$discEl.text( formatCurrency( discrepancy ) );
 
-			$statusEl.text( statusText ).removeClass( 'mscm-text-danger mscm-text-warning mscm-text-success' ).addClass( statusClass );
-			$statusRow.toggle( posReported > 0 );
+				let statusText  = '';
+				let statusClass = '';
+
+				if ( discrepancy < 0 ) {
+					statusText  = 'Shortage of ' + formatCurrency( Math.abs( discrepancy ) );
+					statusClass = 'mscm-text-danger';
+					$discEl.addClass( 'mscm-text-danger' );
+				} else if ( discrepancy > 0 ) {
+					statusText  = 'Over by ' + formatCurrency( discrepancy );
+					statusClass = 'mscm-text-warning';
+					$discEl.addClass( 'mscm-text-warning' );
+				} else {
+					statusText  = 'Balanced';
+					statusClass = 'mscm-text-success';
+					$discEl.addClass( 'mscm-text-success' );
+				}
+
+				$statusEl.text( statusText )
+					.removeClass( 'mscm-text-danger mscm-text-warning mscm-text-success' )
+					.addClass( statusClass );
+				$statusRow.show();
+			}
 		}
 
 		/**
@@ -217,10 +246,11 @@
 			let openingTotal = 0;
 			$( '.mscm-open-float-count' ).each( function () {
 				const count    = parseInt( $( this ).val() ) || 0;
-				const value    = parseFloat( $( this ).data( 'value' ) ) || 0;
+				const value    = parseFloat( $( this ).attr( 'data-value' ) ) || 0;
 				const subtotal = count * value;
-				const fieldId  = $( this ).attr( 'id' );
-				$( '#' + fieldId + '_total' ).text( formatCurrency( subtotal ) );
+
+				// Update the sibling total span via DOM traversal (robust, no ID dependency).
+				$( this ).closest( '.mscm-denom-input-group' ).find( '.mscm-denom-total' ).text( formatCurrency( subtotal ) );
 				openingTotal += subtotal;
 			} );
 
@@ -233,20 +263,19 @@
 			const $varEl    = $( '#mscm-opening-float-variance' );
 			const $statusEl = $( '#mscm-opening-float-status' );
 
-			$varEl.text( formatCurrency( Math.abs( variance ) ) );
 			$varEl.removeClass( 'mscm-text-success mscm-text-danger mscm-text-warning' );
 
 			if ( openingTotal === 0 ) {
-				$statusEl.text( '' );
 				$varEl.text( formatCurrency( 0 ) );
+				$statusEl.text( '' );
 			} else if ( variance === 0 ) {
-				$varEl.addClass( 'mscm-text-success' );
+				$varEl.text( formatCurrency( 0 ) ).addClass( 'mscm-text-success' );
 				$statusEl.text( '✅ Float is correct' ).removeClass( 'mscm-text-danger mscm-text-warning' ).addClass( 'mscm-text-success' );
 			} else if ( variance > 0 ) {
-				$varEl.addClass( 'mscm-text-warning' );
+				$varEl.text( formatCurrency( variance ) ).addClass( 'mscm-text-warning' );
 				$statusEl.text( '⚠️ Float is over by ' + formatCurrency( variance ) ).removeClass( 'mscm-text-success mscm-text-danger' ).addClass( 'mscm-text-warning' );
 			} else {
-				$varEl.addClass( 'mscm-text-danger' );
+				$varEl.text( formatCurrency( Math.abs( variance ) ) ).addClass( 'mscm-text-danger' );
 				$statusEl.text( '❌ Float is short by ' + formatCurrency( Math.abs( variance ) ) ).removeClass( 'mscm-text-success mscm-text-warning' ).addClass( 'mscm-text-danger' );
 			}
 		}
