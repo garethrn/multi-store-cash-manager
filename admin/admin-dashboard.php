@@ -157,6 +157,19 @@ function mscm_render_admin_dashboard() {
 									<span class="mscm-store-stat-value"><?php echo esc_html( $currency . number_format( $store_stats['mtd_sales'], 2 ) ); ?></span>
 									<span class="mscm-store-stat-label"><?php esc_html_e( 'MTD', 'multi-store-cash-manager' ); ?></span>
 								</div>
+								<?php if ( $store_stats['mtd_target'] > 0 ) : ?>
+								<div class="mscm-store-stat" style="grid-column:1/-1;margin-top:6px;">
+									<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+										<span><?php esc_html_e( 'Target', 'multi-store-cash-manager' ); ?>: <?php echo esc_html( $currency . number_format( $store_stats['mtd_target'], 2 ) ); ?></span>
+										<span style="font-weight:600;"><?php echo esc_html( $store_stats['target_progress'] ); ?>%</span>
+									</div>
+									<div class="mscm-progress-bar" style="height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;">
+										<div class="mscm-progress-fill <?php echo $store_stats['target_progress'] >= 100 ? 'mscm-progress-success' : ( $store_stats['target_progress'] >= 75 ? 'mscm-progress-success' : 'mscm-progress-warning' ); ?>"
+											style="width:<?php echo esc_attr( min( 100, $store_stats['target_progress'] ) ); ?>%;height:100%;border-radius:3px;">
+										</div>
+									</div>
+								</div>
+								<?php endif; ?>
 							</div>
 						</div>
 					<?php endforeach; ?>

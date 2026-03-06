@@ -77,6 +77,7 @@
 			}
 
 			recalculateAll();
+			recalculateOpeningFloat();
 		}
 
 		/**
@@ -227,14 +228,17 @@
 			const variance      = openingTotal - expectedFloat;
 
 			$( '#mscm-opening-float-total' ).text( formatCurrency( openingTotal ) );
+			$( '#mscm-expected-float' ).text( formatCurrency( expectedFloat ) );
 
-			const $varEl = $( '#mscm-opening-float-variance' );
+			const $varEl    = $( '#mscm-opening-float-variance' );
+			const $statusEl = $( '#mscm-opening-float-status' );
+
 			$varEl.text( formatCurrency( Math.abs( variance ) ) );
 			$varEl.removeClass( 'mscm-text-success mscm-text-danger mscm-text-warning' );
 
-			const $statusEl = $( '#mscm-opening-float-status' );
 			if ( openingTotal === 0 ) {
 				$statusEl.text( '' );
+				$varEl.text( formatCurrency( 0 ) );
 			} else if ( variance === 0 ) {
 				$varEl.addClass( 'mscm-text-success' );
 				$statusEl.text( '✅ Float is correct' ).removeClass( 'mscm-text-danger mscm-text-warning' ).addClass( 'mscm-text-success' );

@@ -445,9 +445,23 @@ function mscm_end_of_day_shortcode( $atts ) {
 			<div class="mscm-form-section mscm-summary-section">
 				<h3><?php esc_html_e( 'Summary', 'multi-store-cash-manager' ); ?></h3>
 				<div class="mscm-banking-summary">
+
+					<!-- Sales build-up: each line contributes to Total Sales -->
 					<div class="mscm-summary-row">
-						<span><?php esc_html_e( 'Total Cash:', 'multi-store-cash-manager' ); ?></span>
+						<span><?php esc_html_e( 'Total Cash (denominations):', 'multi-store-cash-manager' ); ?></span>
 						<span id="mscm-summary-cash"><?php echo esc_html( $currency . '0.00' ); ?></span>
+					</div>
+					<div class="mscm-summary-row">
+						<span><?php esc_html_e( 'Less Float:', 'multi-store-cash-manager' ); ?></span>
+						<span id="mscm-summary-float">- <?php echo esc_html( $currency . '0.00' ); ?></span>
+					</div>
+					<div class="mscm-summary-row mscm-summary-banking">
+						<span><?php esc_html_e( 'Cash to Bank:', 'multi-store-cash-manager' ); ?></span>
+						<span id="mscm-summary-banking"><?php echo esc_html( $currency . '0.00' ); ?></span>
+					</div>
+					<div class="mscm-summary-row" id="mscm-cash-payouts-row" style="display:none;">
+						<span><?php esc_html_e( '+ Cash Payouts (paid out, also in POS):', 'multi-store-cash-manager' ); ?></span>
+						<span id="mscm-summary-cash-payouts"><?php echo esc_html( $currency . '0.00' ); ?></span>
 					</div>
 					<div class="mscm-summary-row">
 						<span><?php esc_html_e( 'Credit/Debit Card:', 'multi-store-cash-manager' ); ?></span>
@@ -461,27 +475,22 @@ function mscm_end_of_day_shortcode( $atts ) {
 						<span><?php esc_html_e( 'Total Sales:', 'multi-store-cash-manager' ); ?></span>
 						<span id="mscm-total-sales"><?php echo esc_html( $currency . '0.00' ); ?></span>
 					</div>
+
 					<div class="mscm-summary-divider"></div>
-					<div class="mscm-summary-row">
-						<span><?php esc_html_e( 'Less Float:', 'multi-store-cash-manager' ); ?></span>
-						<span id="mscm-summary-float">- <?php echo esc_html( $currency . '0.00' ); ?></span>
-					</div>
-					<div class="mscm-summary-row" id="mscm-cash-payouts-row" style="display:none;">
-						<span><?php esc_html_e( 'Cash Payouts (included in sales):', 'multi-store-cash-manager' ); ?></span>
-						<span id="mscm-summary-cash-payouts"><?php echo esc_html( $currency . '0.00' ); ?></span>
-					</div>
-					<div class="mscm-summary-row mscm-summary-banking">
-						<span><?php esc_html_e( 'Cash to Bank:', 'multi-store-cash-manager' ); ?></span>
-						<span id="mscm-summary-banking"><?php echo esc_html( $currency . '0.00' ); ?></span>
-					</div>
+
+					<!-- POS comparison -->
 					<div class="mscm-summary-row mscm-discrepancy-row">
-						<span><?php esc_html_e( 'Discrepancy:', 'multi-store-cash-manager' ); ?></span>
+						<span><?php esc_html_e( 'Discrepancy (vs POS):', 'multi-store-cash-manager' ); ?></span>
 						<span id="mscm-discrepancy"><?php echo esc_html( $currency . '0.00' ); ?></span>
 					</div>
 					<div class="mscm-summary-row" id="mscm-discrepancy-status-row" style="display:none;">
 						<span></span>
 						<span id="mscm-discrepancy-status" class="mscm-discrepancy-label"></span>
 					</div>
+
+					<div class="mscm-summary-divider"></div>
+
+					<!-- Net banking -->
 					<div class="mscm-summary-row mscm-summary-net">
 						<span><?php esc_html_e( 'Net Banking:', 'multi-store-cash-manager' ); ?></span>
 						<span id="mscm-net-banking"><?php echo esc_html( $currency . '0.00' ); ?></span>

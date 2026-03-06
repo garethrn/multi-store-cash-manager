@@ -918,14 +918,34 @@ class MSCM_DB {
 			)
 		);
 
-		// MTD target progress.
-		$mtd_target = $this->wpdb->get_var(
-			$this->wpdb->prepare(
-				"SELECT COALESCE(SUM(target_amount), 0) FROM {$this->tables['targets']}
-				WHERE period_year = %d AND period_month = %d {$store_where}",
-				array_merge( array( wp_date( 'Y', strtotime( $date ) ), wp_date( 'n', strtotime( $date ) ) ), $params )
-			)
-		);
+		// MTD target progress: sum the latest target per store to avoid counting duplicates.
+		if ( $store_id ) {
+			$mtd_target = $this->wpdb->get_var(
+				$this->wpdb->prepare(
+					"SELECT COALESCE(target_amount, 0) FROM {$this->tables['targets']}
+					WHERE period_year = %d AND period_month = %d AND store_id = %d
+					ORDER BY id DESC LIMIT 1",
+					wp_date( 'Y', strtotime( $date ) ),
+					wp_date( 'n', strtotime( $date ) ),
+					absint( $store_id )
+				)
+			);
+		} else {
+			$mtd_target = $this->wpdb->get_var(
+				$this->wpdb->prepare(
+					"SELECT COALESCE(SUM(t.target_amount), 0)
+					FROM {$this->tables['targets']} t
+					INNER JOIN (
+						SELECT store_id, MAX(id) AS max_id
+						FROM {$this->tables['targets']}
+						WHERE period_year = %d AND period_month = %d
+						GROUP BY store_id
+					) latest ON t.id = latest.max_id",
+					wp_date( 'Y', strtotime( $date ) ),
+					wp_date( 'n', strtotime( $date ) )
+				)
+			);
+		}
 
 		return array(
 			'today_sales'     => floatval( $today_sales ),
@@ -957,6 +977,21 @@ class MSCM_DB {
 		foreach ( $allowed as $field ) {
 			if ( isset( $data[ $field ] ) ) {
 				$sanitized[ $field ] = $data[ $field ];
+			}
+		}
+
+		// If no explicit ID, look for an existing row for this store+period so we update instead of inserting a duplicate.
+		if ( empty( $data['id'] ) && ! empty( $sanitized['store_id'] ) && ! empty( $sanitized['period_year'] ) && ! empty( $sanitized['period_month'] ) ) {
+			$existing_id = $this->wpdb->get_var(
+				$this->wpdb->prepare(
+					"SELECT id FROM {$this->tables['targets']} WHERE store_id = %d AND period_year = %d AND period_month = %d ORDER BY id DESC LIMIT 1",
+					absint( $sanitized['store_id'] ),
+					absint( $sanitized['period_year'] ),
+					absint( $sanitized['period_month'] )
+				)
+			);
+			if ( $existing_id ) {
+				$data['id'] = absint( $existing_id );
 			}
 		}
 
