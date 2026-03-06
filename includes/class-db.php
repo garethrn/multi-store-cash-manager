@@ -128,9 +128,16 @@ class MSCM_DB {
 			other_digital decimal(10,2) NOT NULL DEFAULT 0.00,
 			-- Calculated totals.
 			total_sales decimal(10,2) NOT NULL DEFAULT 0.00,
+			pos_cash decimal(10,2) NOT NULL DEFAULT 0.00,
+			pos_eft decimal(10,2) NOT NULL DEFAULT 0.00,
+			pos_credit_card decimal(10,2) NOT NULL DEFAULT 0.00,
 			pos_reported decimal(10,2) NOT NULL DEFAULT 0.00,
 			discrepancy decimal(10,2) NOT NULL DEFAULT 0.00,
 			net_banking decimal(10,2) NOT NULL DEFAULT 0.00,
+			-- Banking details.
+			banking_date date DEFAULT NULL,
+			banked_by varchar(255) DEFAULT '',
+			banking_ref varchar(255) DEFAULT '',
 			-- Notes and status.
 			notes text DEFAULT '',
 			status varchar(20) NOT NULL DEFAULT 'pending',
@@ -541,7 +548,9 @@ class MSCM_DB {
 			'denom_5', 'denom_2', 'denom_1', 'denom_50c', 'denom_20c', 'denom_10c',
 			'total_cash', 'float_amount', 'cash_to_bank',
 			'credit_card', 'eft', 'other_digital',
-			'total_sales', 'pos_reported', 'discrepancy', 'net_banking',
+			'total_sales', 'pos_cash', 'pos_eft', 'pos_credit_card', 'pos_reported',
+			'discrepancy', 'net_banking',
+			'banking_date', 'banked_by', 'banking_ref',
 			'notes', 'status', 'latitude', 'longitude', 'photo_url',
 		);
 

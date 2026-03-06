@@ -123,8 +123,12 @@
 			// Total sales uses cash-to-bank (float & cash payouts excluded) + other payment types.
 			const totalSales = cashToBank + creditCard + eft + otherDigital;
 
-			const posReported  = parseFloat( $( '#mscm-pos-reported' ).val() ) || 0;
-			const discrepancy  = totalSales - posReported;
+			// POS total is sum of three POS breakdown fields.
+			const posCash       = parseFloat( $( '#mscm-pos-cash' ).val() ) || 0;
+			const posEft        = parseFloat( $( '#mscm-pos-eft' ).val() ) || 0;
+			const posCreditCard = parseFloat( $( '#mscm-pos-credit-card' ).val() ) || 0;
+			const posReported   = posCash + posEft + posCreditCard;
+			const discrepancy   = totalSales - posReported;
 
 			const totalPurchases = calcDynamicTotal( '.mscm-purchase-amount' );
 			// Net banking: cash_to_bank minus bank-type payouts minus purchases.
@@ -152,6 +156,7 @@
 			$( '#mscm-total-payouts' ).text( formatCurrency( totalPayouts ) );
 			$( '#mscm-total-purchases' ).text( formatCurrency( totalPurchases ) );
 			$( '#mscm-net-banking' ).text( formatCurrency( netBanking ) );
+			$( '#mscm-pos-total' ).text( formatCurrency( posReported ) );
 
 			// Discrepancy with color and shortage/over label.
 			const $discEl     = $( '#mscm-discrepancy' );
@@ -197,7 +202,7 @@
 		}
 
 		// Bind calculation events.
-		$form.on( 'input change', '.mscm-denom-count, #mscm-float, .mscm-payment-input, #mscm-pos-reported, .mscm-payout-amount, .mscm-purchase-amount, .mscm-dyn-payment-type', recalculateAll );
+		$form.on( 'input change', '.mscm-denom-count, #mscm-float, .mscm-payment-input, .mscm-pos-input, .mscm-payout-amount, .mscm-purchase-amount, .mscm-dyn-payment-type', recalculateAll );
 
 		// =========================================================================
 		// Dynamic Rows: Payouts.
@@ -366,6 +371,28 @@
 				entry.purchases.forEach( function ( p ) {
 					addPurchaseRow( p );
 				} );
+			}
+
+			// POS fields.
+			if ( entry.pos_cash !== undefined ) {
+				$( '#mscm-pos-cash' ).val( entry.pos_cash );
+			}
+			if ( entry.pos_eft !== undefined ) {
+				$( '#mscm-pos-eft' ).val( entry.pos_eft );
+			}
+			if ( entry.pos_credit_card !== undefined ) {
+				$( '#mscm-pos-credit-card' ).val( entry.pos_credit_card );
+			}
+
+			// Banking fields.
+			if ( entry.banking_date ) {
+				$( '#mscm-banking-date' ).val( entry.banking_date );
+			}
+			if ( entry.banked_by ) {
+				$( '#mscm-banked-by' ).val( entry.banked_by );
+			}
+			if ( entry.banking_ref ) {
+				$( '#mscm-banking-ref' ).val( entry.banking_ref );
 			}
 		}
 

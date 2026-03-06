@@ -95,16 +95,22 @@ function mscm_end_of_day_shortcode( $atts ) {
 	$entry_js_data = array();
 	if ( $is_edit_mode && $existing_entry ) {
 		$entry_js_data = array(
-			'entry_id'      => (int) $existing_entry->id,
-			'store_id'      => (int) $existing_entry->store_id,
-			'entry_date'    => $existing_entry->entry_date,
-			'float_amount'  => floatval( $existing_entry->float_amount ),
-			'credit_card'   => floatval( $existing_entry->credit_card ),
-			'eft'           => floatval( $existing_entry->eft ),
-			'other_digital' => floatval( $existing_entry->other_digital ),
-			'pos_reported'  => floatval( $existing_entry->pos_reported ),
-			'notes'         => $existing_entry->notes,
-			'payouts'       => array_map( function( $p ) {
+			'entry_id'        => (int) $existing_entry->id,
+			'store_id'        => (int) $existing_entry->store_id,
+			'entry_date'      => $existing_entry->entry_date,
+			'float_amount'    => floatval( $existing_entry->float_amount ),
+			'credit_card'     => floatval( $existing_entry->credit_card ),
+			'eft'             => floatval( $existing_entry->eft ),
+			'other_digital'   => floatval( $existing_entry->other_digital ),
+			'pos_cash'        => floatval( $existing_entry->pos_cash ?? 0 ),
+			'pos_eft'         => floatval( $existing_entry->pos_eft ?? 0 ),
+			'pos_credit_card' => floatval( $existing_entry->pos_credit_card ?? 0 ),
+			'pos_reported'    => floatval( $existing_entry->pos_reported ),
+			'banking_date'    => $existing_entry->banking_date ?? '',
+			'banked_by'       => $existing_entry->banked_by ?? '',
+			'banking_ref'     => $existing_entry->banking_ref ?? '',
+			'notes'           => $existing_entry->notes,
+			'payouts'         => array_map( function( $p ) {
 				return array(
 					'description'  => $p->description,
 					'category'     => $p->category,
@@ -112,7 +118,7 @@ function mscm_end_of_day_shortcode( $atts ) {
 					'payment_type' => $p->payment_type ?? 'cash',
 				);
 			}, $existing_entry->payouts ?? array() ),
-			'purchases'     => array_map( function( $p ) {
+			'purchases'       => array_map( function( $p ) {
 				return array(
 					'description'    => $p->description,
 					'amount'         => floatval( $p->amount ),
@@ -307,15 +313,66 @@ function mscm_end_of_day_shortcode( $atts ) {
 			<!-- POS Comparison -->
 			<div class="mscm-form-section">
 				<h3><?php esc_html_e( 'POS System Comparison', 'multi-store-cash-manager' ); ?></h3>
-				<div class="mscm-form-row">
+				<p class="mscm-section-desc"><?php esc_html_e( 'Enter sales figures from the Point of Sale system. The total will be used to calculate the discrepancy.', 'multi-store-cash-manager' ); ?></p>
+				<div class="mscm-payment-grid">
 					<div class="mscm-form-group">
-						<label for="mscm-pos-reported"><?php esc_html_e( 'POS Reported Sales', 'multi-store-cash-manager' ); ?></label>
+						<label for="mscm-pos-cash">💵 <?php esc_html_e( 'POS Cash Takings', 'multi-store-cash-manager' ); ?></label>
 						<div class="mscm-input-currency">
 							<span><?php echo esc_html( $currency ); ?></span>
-							<input type="number" id="mscm-pos-reported" name="pos_reported"
-								value="<?php echo esc_attr( $is_edit_mode ? floatval( $existing_entry->pos_reported ) : 0 ); ?>"
-								min="0" step="0.01" class="mscm-input">
+							<input type="number" id="mscm-pos-cash" name="pos_cash"
+								value="<?php echo esc_attr( $is_edit_mode ? floatval( $existing_entry->pos_cash ?? 0 ) : 0 ); ?>"
+								min="0" step="0.01" class="mscm-input mscm-pos-input">
 						</div>
+					</div>
+					<div class="mscm-form-group">
+						<label for="mscm-pos-eft">🏦 <?php esc_html_e( 'POS EFT', 'multi-store-cash-manager' ); ?></label>
+						<div class="mscm-input-currency">
+							<span><?php echo esc_html( $currency ); ?></span>
+							<input type="number" id="mscm-pos-eft" name="pos_eft"
+								value="<?php echo esc_attr( $is_edit_mode ? floatval( $existing_entry->pos_eft ?? 0 ) : 0 ); ?>"
+								min="0" step="0.01" class="mscm-input mscm-pos-input">
+						</div>
+					</div>
+					<div class="mscm-form-group">
+						<label for="mscm-pos-credit-card">💳 <?php esc_html_e( 'POS Credit Cards', 'multi-store-cash-manager' ); ?></label>
+						<div class="mscm-input-currency">
+							<span><?php echo esc_html( $currency ); ?></span>
+							<input type="number" id="mscm-pos-credit-card" name="pos_credit_card"
+								value="<?php echo esc_attr( $is_edit_mode ? floatval( $existing_entry->pos_credit_card ?? 0 ) : 0 ); ?>"
+								min="0" step="0.01" class="mscm-input mscm-pos-input">
+						</div>
+					</div>
+				</div>
+				<div class="mscm-summary-row mscm-summary-total" style="margin-top:8px;">
+					<strong><?php esc_html_e( 'POS Total Sales:', 'multi-store-cash-manager' ); ?></strong>
+					<strong id="mscm-pos-total"><?php echo esc_html( $currency . '0.00' ); ?></strong>
+				</div>
+			</div>
+
+			<!-- Banking Details -->
+			<div class="mscm-form-section">
+				<h3><?php esc_html_e( 'Banking Details', 'multi-store-cash-manager' ); ?></h3>
+				<p class="mscm-section-desc"><?php esc_html_e( 'Banking is usually done at a later date. Fill in these details once the cash has been banked.', 'multi-store-cash-manager' ); ?></p>
+				<div class="mscm-form-row">
+					<div class="mscm-form-group">
+						<label for="mscm-banking-date"><?php esc_html_e( 'Date Banked', 'multi-store-cash-manager' ); ?></label>
+						<input type="date" id="mscm-banking-date" name="banking_date"
+							value="<?php echo esc_attr( $is_edit_mode ? ( $existing_entry->banking_date ?? '' ) : '' ); ?>"
+							class="mscm-input">
+					</div>
+					<div class="mscm-form-group">
+						<label for="mscm-banked-by"><?php esc_html_e( 'Banked By', 'multi-store-cash-manager' ); ?></label>
+						<input type="text" id="mscm-banked-by" name="banked_by"
+							value="<?php echo esc_attr( $is_edit_mode ? ( $existing_entry->banked_by ?? '' ) : '' ); ?>"
+							placeholder="<?php esc_attr_e( 'Name of person who banked the cash', 'multi-store-cash-manager' ); ?>"
+							class="mscm-input">
+					</div>
+					<div class="mscm-form-group">
+						<label for="mscm-banking-ref"><?php esc_html_e( 'Banking Reference', 'multi-store-cash-manager' ); ?></label>
+						<input type="text" id="mscm-banking-ref" name="banking_ref"
+							value="<?php echo esc_attr( $is_edit_mode ? ( $existing_entry->banking_ref ?? '' ) : '' ); ?>"
+							placeholder="<?php esc_attr_e( 'Bank deposit slip / reference number', 'multi-store-cash-manager' ); ?>"
+							class="mscm-input">
 					</div>
 				</div>
 			</div>

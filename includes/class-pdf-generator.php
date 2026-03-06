@@ -85,11 +85,15 @@ class MSCM_PDF_Generator {
 		.positive { color: #10b981; }
 		.signature-section { margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
 		.signature-line { border-top: 1px solid #333; padding-top: 5px; margin-top: 40px; font-size: 11px; }
+		.entry-detail { margin-bottom: 30px; border: 1px solid #e5e7eb; border-radius: 4px; padding: 12px; }
+		.detail-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+		.detail-grid table { font-size: 11px; width: 100%; }
 		@page { size: A4; margin: 15mm; }
 		@media print {
 			body { padding: 0; }
 			.no-print { display: none; }
 			button { display: none; }
+			.entry-detail { page-break-inside: avoid; }
 		}
 	</style>
 </head>
@@ -174,9 +178,11 @@ class MSCM_PDF_Generator {
 					<th><?php esc_html_e( 'Date', 'multi-store-cash-manager' ); ?></th>
 					<th><?php esc_html_e( 'Store', 'multi-store-cash-manager' ); ?></th>
 					<th class="text-right"><?php esc_html_e( 'Total Cash', 'multi-store-cash-manager' ); ?></th>
+					<th class="text-right"><?php esc_html_e( 'Cash to Bank', 'multi-store-cash-manager' ); ?></th>
 					<th class="text-right"><?php esc_html_e( 'Credit Card', 'multi-store-cash-manager' ); ?></th>
 					<th class="text-right"><?php esc_html_e( 'EFT', 'multi-store-cash-manager' ); ?></th>
 					<th class="text-right"><?php esc_html_e( 'Total Sales', 'multi-store-cash-manager' ); ?></th>
+					<th class="text-right"><?php esc_html_e( 'POS Total', 'multi-store-cash-manager' ); ?></th>
 					<th class="text-right"><?php esc_html_e( 'Discrepancy', 'multi-store-cash-manager' ); ?></th>
 					<th><?php esc_html_e( 'Status', 'multi-store-cash-manager' ); ?></th>
 				</tr>
@@ -187,9 +193,11 @@ class MSCM_PDF_Generator {
 						<td><?php echo esc_html( $entry->entry_date ); ?></td>
 						<td><?php echo esc_html( $entry->store_name ); ?></td>
 						<td class="text-right"><?php echo esc_html( $currency . number_format( $entry->total_cash, 2 ) ); ?></td>
+						<td class="text-right"><?php echo esc_html( $currency . number_format( $entry->cash_to_bank, 2 ) ); ?></td>
 						<td class="text-right"><?php echo esc_html( $currency . number_format( $entry->credit_card, 2 ) ); ?></td>
 						<td class="text-right"><?php echo esc_html( $currency . number_format( $entry->eft, 2 ) ); ?></td>
 						<td class="text-right"><?php echo esc_html( $currency . number_format( $entry->total_sales, 2 ) ); ?></td>
+						<td class="text-right"><?php echo esc_html( $currency . number_format( $entry->pos_reported, 2 ) ); ?></td>
 						<td class="text-right <?php echo floatval( $entry->discrepancy ) < 0 ? 'negative' : ( floatval( $entry->discrepancy ) > 0 ? 'positive' : '' ); ?>">
 							<?php echo esc_html( $currency . number_format( $entry->discrepancy, 2 ) ); ?>
 						</td>
@@ -199,14 +207,253 @@ class MSCM_PDF_Generator {
 				<tr class="totals-row">
 					<td colspan="2"><?php esc_html_e( 'TOTALS', 'multi-store-cash-manager' ); ?></td>
 					<td class="text-right"><?php echo esc_html( $currency . number_format( $report['totals']['total_cash'], 2 ) ); ?></td>
+					<td class="text-right"><?php echo esc_html( $currency . number_format( $report['totals']['cash_to_bank'], 2 ) ); ?></td>
 					<td class="text-right"><?php echo esc_html( $currency . number_format( $report['totals']['credit_card'], 2 ) ); ?></td>
 					<td class="text-right"><?php echo esc_html( $currency . number_format( $report['totals']['eft'], 2 ) ); ?></td>
 					<td class="text-right"><?php echo esc_html( $currency . number_format( $report['totals']['total_sales'], 2 ) ); ?></td>
+					<td class="text-right"><?php echo esc_html( $currency . number_format( $report['totals']['pos_reported'], 2 ) ); ?></td>
 					<td class="text-right"><?php echo esc_html( $currency . number_format( $report['totals']['discrepancy'], 2 ) ); ?></td>
 					<td></td>
 				</tr>
 			</tbody>
 		</table>
+
+		<?php
+		// Detailed per-entry sections.
+		foreach ( $report['entries'] as $entry ) :
+			$this->render_eod_entry_detail( $entry, $currency );
+		endforeach;
+	}
+
+	/**
+	 * Render detailed breakdown for a single EOD entry.
+	 *
+	 * @param object $entry    Entry object.
+	 * @param string $currency Currency symbol.
+	 */
+	private function render_eod_entry_detail( $entry, $currency ) {
+		$db = MSCM()->db;
+		// Fetch payouts and purchases for this entry.
+		$payouts   = $db->get_entry_payouts( $entry->id );
+		$purchases = $db->get_entry_purchases( $entry->id );
+		?>
+		<div class="entry-detail" style="page-break-inside:avoid;margin-bottom:30px;border:1px solid #e5e7eb;border-radius:4px;padding:12px;">
+			<h2 style="font-size:13px;margin-bottom:8px;border-bottom:1px solid #2563eb;padding-bottom:4px;">
+				<?php
+				echo esc_html( sprintf(
+					/* translators: 1: store name, 2: entry date */
+					__( '%1$s — %2$s', 'multi-store-cash-manager' ),
+					$entry->store_name,
+					$entry->entry_date
+				) );
+				?>
+				<span style="float:right;font-weight:normal;font-size:11px;">
+					<?php echo esc_html( ucfirst( $entry->status ) ); ?>
+				</span>
+			</h2>
+
+			<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+
+				<!-- Cash Denominations -->
+				<div>
+					<strong style="display:block;margin-bottom:4px;"><?php esc_html_e( 'Cash Denominations', 'multi-store-cash-manager' ); ?></strong>
+					<table style="width:100%;font-size:11px;">
+						<tbody>
+							<?php
+							$denoms = array(
+								'denom_200' => array( 'R200', 200 ),
+								'denom_100' => array( 'R100', 100 ),
+								'denom_50'  => array( 'R50', 50 ),
+								'denom_20'  => array( 'R20', 20 ),
+								'denom_10'  => array( 'R10', 10 ),
+								'denom_5'   => array( 'R5', 5 ),
+								'denom_2'   => array( 'R2', 2 ),
+								'denom_1'   => array( 'R1', 1 ),
+								'denom_50c' => array( '50c', 0.5 ),
+								'denom_20c' => array( '20c', 0.2 ),
+								'denom_10c' => array( '10c', 0.1 ),
+							);
+							foreach ( $denoms as $field => $info ) :
+								$count = intval( $entry->$field ?? 0 );
+								if ( $count <= 0 ) {
+									continue;
+								}
+								?>
+								<tr>
+									<td><?php echo esc_html( $info[0] ); ?></td>
+									<td class="text-right">× <?php echo esc_html( $count ); ?></td>
+									<td class="text-right"><?php echo esc_html( $currency . number_format( $count * $info[1], 2 ) ); ?></td>
+								</tr>
+							<?php endforeach; ?>
+							<tr style="font-weight:bold;border-top:1px solid #ccc;">
+								<td colspan="2"><?php esc_html_e( 'Total Cash', 'multi-store-cash-manager' ); ?></td>
+								<td class="text-right"><?php echo esc_html( $currency . number_format( $entry->total_cash, 2 ) ); ?></td>
+							</tr>
+							<tr>
+								<td colspan="2"><?php esc_html_e( 'Less Float', 'multi-store-cash-manager' ); ?></td>
+								<td class="text-right">- <?php echo esc_html( $currency . number_format( $entry->float_amount, 2 ) ); ?></td>
+							</tr>
+							<tr style="font-weight:bold;">
+								<td colspan="2"><?php esc_html_e( 'Cash to Bank', 'multi-store-cash-manager' ); ?></td>
+								<td class="text-right"><?php echo esc_html( $currency . number_format( $entry->cash_to_bank, 2 ) ); ?></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<!-- POS Comparison -->
+				<div>
+					<strong style="display:block;margin-bottom:4px;"><?php esc_html_e( 'POS Comparison', 'multi-store-cash-manager' ); ?></strong>
+					<table style="width:100%;font-size:11px;">
+						<tbody>
+							<tr>
+								<td><?php esc_html_e( 'POS Cash', 'multi-store-cash-manager' ); ?></td>
+								<td class="text-right"><?php echo esc_html( $currency . number_format( floatval( $entry->pos_cash ?? 0 ), 2 ) ); ?></td>
+							</tr>
+							<tr>
+								<td><?php esc_html_e( 'POS EFT', 'multi-store-cash-manager' ); ?></td>
+								<td class="text-right"><?php echo esc_html( $currency . number_format( floatval( $entry->pos_eft ?? 0 ), 2 ) ); ?></td>
+							</tr>
+							<tr>
+								<td><?php esc_html_e( 'POS Credit Cards', 'multi-store-cash-manager' ); ?></td>
+								<td class="text-right"><?php echo esc_html( $currency . number_format( floatval( $entry->pos_credit_card ?? 0 ), 2 ) ); ?></td>
+							</tr>
+							<tr style="font-weight:bold;border-top:1px solid #ccc;">
+								<td><?php esc_html_e( 'POS Total', 'multi-store-cash-manager' ); ?></td>
+								<td class="text-right"><?php echo esc_html( $currency . number_format( $entry->pos_reported, 2 ) ); ?></td>
+							</tr>
+							<tr style="border-top:1px solid #ccc;">
+								<td><?php esc_html_e( 'Actual Sales', 'multi-store-cash-manager' ); ?></td>
+								<td class="text-right"><?php echo esc_html( $currency . number_format( $entry->total_sales, 2 ) ); ?></td>
+							</tr>
+							<tr class="<?php echo floatval( $entry->discrepancy ) < 0 ? 'negative' : ( floatval( $entry->discrepancy ) > 0 ? 'positive' : '' ); ?>">
+								<td><strong><?php esc_html_e( 'Discrepancy', 'multi-store-cash-manager' ); ?></strong></td>
+								<td class="text-right"><strong><?php echo esc_html( $currency . number_format( $entry->discrepancy, 2 ) ); ?></strong></td>
+							</tr>
+						</tbody>
+					</table>
+
+					<!-- Banking Details -->
+					<?php if ( ! empty( $entry->banking_date ) || ! empty( $entry->banked_by ) || ! empty( $entry->banking_ref ) ) : ?>
+					<strong style="display:block;margin:10px 0 4px;"><?php esc_html_e( 'Banking Details', 'multi-store-cash-manager' ); ?></strong>
+					<table style="width:100%;font-size:11px;">
+						<tbody>
+							<?php if ( ! empty( $entry->banking_date ) ) : ?>
+							<tr>
+								<td><?php esc_html_e( 'Date Banked', 'multi-store-cash-manager' ); ?></td>
+								<td class="text-right"><?php echo esc_html( $entry->banking_date ); ?></td>
+							</tr>
+							<?php endif; ?>
+							<?php if ( ! empty( $entry->banked_by ) ) : ?>
+							<tr>
+								<td><?php esc_html_e( 'Banked By', 'multi-store-cash-manager' ); ?></td>
+								<td class="text-right"><?php echo esc_html( $entry->banked_by ); ?></td>
+							</tr>
+							<?php endif; ?>
+							<?php if ( ! empty( $entry->banking_ref ) ) : ?>
+							<tr>
+								<td><?php esc_html_e( 'Reference', 'multi-store-cash-manager' ); ?></td>
+								<td class="text-right"><?php echo esc_html( $entry->banking_ref ); ?></td>
+							</tr>
+							<?php endif; ?>
+						</tbody>
+					</table>
+					<?php endif; ?>
+				</div>
+
+				<!-- Sales Summary -->
+				<div>
+					<strong style="display:block;margin-bottom:4px;"><?php esc_html_e( 'Sales Summary', 'multi-store-cash-manager' ); ?></strong>
+					<table style="width:100%;font-size:11px;">
+						<tbody>
+							<tr>
+								<td><?php esc_html_e( 'Cash to Bank', 'multi-store-cash-manager' ); ?></td>
+								<td class="text-right"><?php echo esc_html( $currency . number_format( $entry->cash_to_bank, 2 ) ); ?></td>
+							</tr>
+							<tr>
+								<td><?php esc_html_e( 'Credit/Debit Card', 'multi-store-cash-manager' ); ?></td>
+								<td class="text-right"><?php echo esc_html( $currency . number_format( $entry->credit_card, 2 ) ); ?></td>
+							</tr>
+							<tr>
+								<td><?php esc_html_e( 'EFT', 'multi-store-cash-manager' ); ?></td>
+								<td class="text-right"><?php echo esc_html( $currency . number_format( $entry->eft, 2 ) ); ?></td>
+							</tr>
+							<?php if ( floatval( $entry->other_digital ?? 0 ) > 0 ) : ?>
+							<tr>
+								<td><?php esc_html_e( 'Other Digital', 'multi-store-cash-manager' ); ?></td>
+								<td class="text-right"><?php echo esc_html( $currency . number_format( $entry->other_digital, 2 ) ); ?></td>
+							</tr>
+							<?php endif; ?>
+							<tr style="font-weight:bold;border-top:1px solid #ccc;">
+								<td><?php esc_html_e( 'Total Sales', 'multi-store-cash-manager' ); ?></td>
+								<td class="text-right"><?php echo esc_html( $currency . number_format( $entry->total_sales, 2 ) ); ?></td>
+							</tr>
+							<tr style="border-top:1px solid #ccc;">
+								<td><?php esc_html_e( 'Net Banking', 'multi-store-cash-manager' ); ?></td>
+								<td class="text-right"><?php echo esc_html( $currency . number_format( $entry->net_banking, 2 ) ); ?></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			<?php if ( ! empty( $payouts ) ) : ?>
+			<div style="margin-bottom:10px;">
+				<strong style="display:block;margin-bottom:4px;"><?php esc_html_e( 'Payouts', 'multi-store-cash-manager' ); ?></strong>
+				<table style="width:100%;font-size:11px;">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Description', 'multi-store-cash-manager' ); ?></th>
+							<th><?php esc_html_e( 'Category', 'multi-store-cash-manager' ); ?></th>
+							<th><?php esc_html_e( 'Type', 'multi-store-cash-manager' ); ?></th>
+							<th class="text-right"><?php esc_html_e( 'Amount', 'multi-store-cash-manager' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php foreach ( $payouts as $payout ) : ?>
+						<tr>
+							<td><?php echo esc_html( $payout->description ); ?></td>
+							<td><?php echo esc_html( ucfirst( $payout->category ) ); ?></td>
+							<td><?php echo esc_html( 'bank' === $payout->payment_type ? __( 'Bank Transfer', 'multi-store-cash-manager' ) : __( 'Cash', 'multi-store-cash-manager' ) ); ?></td>
+							<td class="text-right"><?php echo esc_html( $currency . number_format( $payout->amount, 2 ) ); ?></td>
+						</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
+			<?php endif; ?>
+
+			<?php if ( ! empty( $purchases ) ) : ?>
+			<div>
+				<strong style="display:block;margin-bottom:4px;"><?php esc_html_e( 'Purchases / Expenses', 'multi-store-cash-manager' ); ?></strong>
+				<table style="width:100%;font-size:11px;">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Description', 'multi-store-cash-manager' ); ?></th>
+							<th><?php esc_html_e( 'Receipt #', 'multi-store-cash-manager' ); ?></th>
+							<th class="text-right"><?php esc_html_e( 'Amount', 'multi-store-cash-manager' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php foreach ( $purchases as $purchase ) : ?>
+						<tr>
+							<td><?php echo esc_html( $purchase->description ); ?></td>
+							<td><?php echo esc_html( $purchase->receipt_number ?? '' ); ?></td>
+							<td class="text-right"><?php echo esc_html( $currency . number_format( $purchase->amount, 2 ) ); ?></td>
+						</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
+			<?php endif; ?>
+
+			<?php if ( ! empty( $entry->notes ) ) : ?>
+			<div style="margin-top:8px;font-size:11px;color:#555;">
+				<strong><?php esc_html_e( 'Notes:', 'multi-store-cash-manager' ); ?></strong>
+				<?php echo esc_html( $entry->notes ); ?>
+			</div>
+			<?php endif; ?>
+		</div>
 		<?php
 	}
 
