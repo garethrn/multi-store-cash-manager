@@ -104,6 +104,12 @@ function mscm_render_targets_page() {
 							placeholder="<?php esc_attr_e( 'Target Amount', 'multi-store-cash-manager' ); ?>"
 							class="regular-text" required>
 					</div>
+					<div style="display:flex;align-items:center;gap:4px;">
+						<label for="mscm-target-working-days" style="white-space:nowrap;"><?php esc_html_e( 'Working Days:', 'multi-store-cash-manager' ); ?></label>
+						<input type="number" id="mscm-target-working-days" name="working_days" min="1" max="31" step="1" value="22"
+							placeholder="<?php esc_attr_e( 'e.g. 22', 'multi-store-cash-manager' ); ?>"
+							class="small-text" style="width:60px;" title="<?php esc_attr_e( 'Number of working days in this month', 'multi-store-cash-manager' ); ?>">
+					</div>
 					<button type="submit" class="button button-primary">
 						<?php esc_html_e( 'Set Target', 'multi-store-cash-manager' ); ?>
 					</button>
@@ -127,6 +133,21 @@ function mscm_render_targets_page() {
 					);
 					?>
 				</h2>
+				<a href="<?php echo esc_url( wp_nonce_url(
+					add_query_arg(
+						array(
+							'action'    => 'mscm_print_report',
+							'type'      => 'targets',
+							'store_id'  => 0,
+							'date_from' => $month_start,
+							'date_to'   => $period_end,
+						),
+						admin_url( 'admin-post.php' )
+					),
+					'mscm_print_report'
+				) ); ?>" target="_blank" class="button button-secondary">
+					🖨️ <?php esc_html_e( 'Print to PDF', 'multi-store-cash-manager' ); ?>
+				</a>
 			</div>
 			<div class="mscm-card-body">
 				<?php
@@ -154,6 +175,29 @@ function mscm_render_targets_page() {
 										);
 										?>
 									</div>
+									<?php if ( $row['working_days'] > 0 ) : ?>
+									<div class="mscm-target-meta" style="margin-top:4px;font-size:12px;color:#6b7280;">
+										<?php
+										echo esc_html( sprintf(
+											/* translators: 1: working days, 2: daily target */
+											__( '%1$d working days | Daily target: %2$s | Target to date: %3$s', 'multi-store-cash-manager' ),
+											$row['working_days'],
+											$currency . number_format( $row['target_per_day'], 2 ),
+											$currency . number_format( $row['target_to_date'], 2 )
+										) );
+										?>
+									</div>
+									<div class="mscm-target-meta" style="margin-top:2px;font-size:13px;font-weight:600;">
+										<?php
+										$over_short = $row['over_short'];
+										if ( $over_short >= 0 ) {
+											echo '<span style="color:#10b981;">▲ ' . esc_html( $currency . number_format( $over_short, 2 ) ) . ' ' . esc_html__( 'over target to date', 'multi-store-cash-manager' ) . '</span>';
+										} else {
+											echo '<span style="color:#ef4444;">▼ ' . esc_html( $currency . number_format( abs( $over_short ), 2 ) ) . ' ' . esc_html__( 'short of target to date', 'multi-store-cash-manager' ) . '</span>';
+										}
+										?>
+									</div>
+									<?php endif; ?>
 								</div>
 								<div class="mscm-target-percent <?php echo $row['on_track'] ? 'mscm-positive' : 'mscm-negative'; ?>">
 									<?php echo esc_html( $row['percentage'] . '%' ); ?>

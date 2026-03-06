@@ -32,7 +32,7 @@ define( 'MSCM_VERSION', '1.0.0' );
 define( 'MSCM_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'MSCM_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'MSCM_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
-define( 'MSCM_DB_VERSION', '1.0.0' );
+define( 'MSCM_DB_VERSION', '1.1.0' );
 
 /**
  * Main plugin class.
@@ -103,6 +103,13 @@ class Multi_Store_Cash_Manager {
 	 * @var MSCM_Export
 	 */
 	public $export;
+
+	/**
+	 * PDF generator instance.
+	 *
+	 * @var MSCM_PDF_Generator
+	 */
+	public $pdf;
 
 	/**
 	 * Get the single instance of the class.
@@ -180,6 +187,10 @@ class Multi_Store_Cash_Manager {
 		$this->api           = new MSCM_API();
 		$this->notifications = new MSCM_Notifications();
 		$this->export        = new MSCM_Export();
+		$this->pdf           = new MSCM_PDF_Generator();
+
+		// Run DB upgrades if needed.
+		$this->db->maybe_upgrade();
 	}
 
 	/**
@@ -292,11 +303,12 @@ class Multi_Store_Cash_Manager {
 				'floatAmount' => get_option( 'mscm_default_float', 500 ),
 				'currency'    => get_option( 'mscm_currency', 'R' ),
 				'strings'     => array(
-					'submitting'      => __( 'Submitting...', 'multi-store-cash-manager' ),
-					'submitted'       => __( 'Entry submitted successfully!', 'multi-store-cash-manager' ),
-					'error'           => __( 'An error occurred. Please try again.', 'multi-store-cash-manager' ),
-					'validationError' => __( 'Please fill in all required fields.', 'multi-store-cash-manager' ),
-					'confirmSubmit'   => __( 'Are you sure you want to submit this entry?', 'multi-store-cash-manager' ),
+					'submitting'        => __( 'Submitting...', 'multi-store-cash-manager' ),
+					'submitted'         => __( 'Entry submitted successfully!', 'multi-store-cash-manager' ),
+					'error'             => __( 'An error occurred. Please try again.', 'multi-store-cash-manager' ),
+					'validationError'   => __( 'Please fill in all required fields.', 'multi-store-cash-manager' ),
+					'confirmSubmit'     => __( 'Are you sure you want to submit this entry?', 'multi-store-cash-manager' ),
+					'selectStore'       => __( 'Please select a store.', 'multi-store-cash-manager' ),
 				),
 			)
 		);

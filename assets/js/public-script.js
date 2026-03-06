@@ -97,22 +97,38 @@
 				totalCash += subtotal;
 			} );
 
-			const float      = parseFloat( $( '#mscm-float' ).val() ) || 0;
-			const cashToBank = Math.max( 0, totalCash - float );
+			const float = parseFloat( $( '#mscm-float' ).val() ) || 0;
+
+			// Calculate cash payouts (payment_type === 'cash').
+			let totalCashPayouts = 0;
+			let totalBankPayouts = 0;
+			$( '#mscm-payouts-container .mscm-dynamic-row' ).each( function () {
+				const amount = parseFloat( $( this ).find( '.mscm-payout-amount' ).val() ) || 0;
+				const pt     = $( this ).find( '.mscm-dyn-payment-type' ).val() || 'cash';
+				if ( 'cash' === pt ) {
+					totalCashPayouts += amount;
+				} else {
+					totalBankPayouts += amount;
+				}
+			} );
+			const totalPayouts = totalCashPayouts + totalBankPayouts;
+
+			// Cash payouts come out of the drawer, so they reduce what is banked.
+			const cashToBank = Math.max( 0, totalCash - float - totalCashPayouts );
 
 			const creditCard   = parseFloat( $( '#mscm-credit-card' ).val() ) || 0;
 			const eft          = parseFloat( $( '#mscm-eft' ).val() ) || 0;
 			const otherDigital = parseFloat( $( '#mscm-other-digital' ).val() ) || 0;
 
-			// Total sales uses cash-to-bank (float excluded) + other payment types.
+			// Total sales uses cash-to-bank (float & cash payouts excluded) + other payment types.
 			const totalSales = cashToBank + creditCard + eft + otherDigital;
 
 			const posReported  = parseFloat( $( '#mscm-pos-reported' ).val() ) || 0;
 			const discrepancy  = totalSales - posReported;
 
-			const totalPayouts    = calcDynamicTotal( '.mscm-payout-amount' );
-			const totalPurchases  = calcDynamicTotal( '.mscm-purchase-amount' );
-			const netBanking      = cashToBank - totalPayouts - totalPurchases;
+			const totalPurchases = calcDynamicTotal( '.mscm-purchase-amount' );
+			// Net banking: cash_to_bank minus bank-type payouts minus purchases.
+			const netBanking = cashToBank - totalBankPayouts - totalPurchases;
 
 			// Update display.
 			$( '#mscm-total-cash' ).text( formatCurrency( totalCash ) );
@@ -120,6 +136,15 @@
 
 			$( '#mscm-summary-cash' ).text( formatCurrency( totalCash ) );
 			$( '#mscm-summary-float' ).text( '- ' + formatCurrency( float ) );
+
+			// Show/hide cash payouts line.
+			if ( totalCashPayouts > 0 ) {
+				$( '#mscm-cash-payouts-row' ).show();
+				$( '#mscm-summary-cash-payouts' ).text( '- ' + formatCurrency( totalCashPayouts ) );
+			} else {
+				$( '#mscm-cash-payouts-row' ).hide();
+			}
+
 			$( '#mscm-summary-card' ).text( formatCurrency( creditCard ) );
 			$( '#mscm-summary-eft' ).text( formatCurrency( eft ) );
 			$( '#mscm-total-sales' ).text( formatCurrency( totalSales ) );
@@ -172,7 +197,7 @@
 		}
 
 		// Bind calculation events.
-		$form.on( 'input change', '.mscm-denom-count, #mscm-float, .mscm-payment-input, #mscm-pos-reported, .mscm-payout-amount, .mscm-purchase-amount', recalculateAll );
+		$form.on( 'input change', '.mscm-denom-count, #mscm-float, .mscm-payment-input, #mscm-pos-reported, .mscm-payout-amount, .mscm-purchase-amount, .mscm-dyn-payment-type', recalculateAll );
 
 		// =========================================================================
 		// Dynamic Rows: Payouts.
@@ -181,20 +206,58 @@
 		const payoutTemplate   = document.getElementById( 'mscm-payout-template' );
 		const purchaseTemplate = document.getElementById( 'mscm-purchase-template' );
 
-		$( '#mscm-add-payout' ).on( 'click', function () {
+		/**
+		 * Add a payout row, optionally pre-filled with data.
+		 *
+		 * @param {object} data Optional data to pre-fill.
+		 */
+		function addPayoutRow( data ) {
 			if ( ! payoutTemplate ) {
 				return;
 			}
 			const clone = payoutTemplate.content.cloneNode( true );
+			if ( data ) {
+				clone.querySelector( '[name="payout_description[]"]' ).value = data.description || '';
+				clone.querySelector( '[name="payout_amount[]"]' ).value      = data.amount || 0;
+				const catSelect = clone.querySelector( '[name="payout_category[]"]' );
+				if ( catSelect && data.category ) {
+					catSelect.value = data.category;
+				}
+				const ptSelect = clone.querySelector( '[name="payout_payment_type[]"]' );
+				if ( ptSelect && data.payment_type ) {
+					ptSelect.value = data.payment_type;
+				}
+			}
 			$( '#mscm-payouts-container' ).append( clone );
-		} );
+		}
 
-		$( '#mscm-add-purchase' ).on( 'click', function () {
+		/**
+		 * Add a purchase row, optionally pre-filled with data.
+		 *
+		 * @param {object} data Optional data to pre-fill.
+		 */
+		function addPurchaseRow( data ) {
 			if ( ! purchaseTemplate ) {
 				return;
 			}
 			const clone = purchaseTemplate.content.cloneNode( true );
+			if ( data ) {
+				clone.querySelector( '[name="purchase_description[]"]' ).value = data.description || '';
+				clone.querySelector( '[name="purchase_amount[]"]' ).value      = data.amount || 0;
+				const receiptInput = clone.querySelector( '[name="purchase_receipt[]"]' );
+				if ( receiptInput && data.receipt_number ) {
+					receiptInput.value = data.receipt_number;
+				}
+			}
 			$( '#mscm-purchases-container' ).append( clone );
+		}
+
+		$( '#mscm-add-payout' ).on( 'click', function () {
+			addPayoutRow( null );
+		} );
+
+		$( '#mscm-add-purchase' ).on( 'click', function () {
+			addPurchaseRow( null );
 		} );
 
 		// Remove dynamic row.
@@ -226,10 +289,10 @@
 		$form.on( 'submit', function ( e ) {
 			e.preventDefault();
 
-			// Validate.
-			const storeId = $( '#mscm-store' ).val();
+			// Get store_id - may be from hidden field in edit mode.
+			const storeId = $form.find( '[name="store_id"]' ).last().val();
 			if ( ! storeId ) {
-				showMessage( 'Please select a store.', 'error' );
+				showMessage( strings.selectStore || 'Please select a store.', 'error' );
 				return;
 			}
 
@@ -237,23 +300,27 @@
 				return;
 			}
 
-			const $submitBtn = $( '#mscm-submit-btn' );
+			const $submitBtn  = $( '#mscm-submit-btn' );
+			const isEditMode  = $form.find( '[name="entry_id"]' ).length > 0;
+			const btnText     = isEditMode ? 'Update Entry' : 'Submit Entry';
+
 			$submitBtn.text( strings.submitting ).prop( 'disabled', true );
 
 			const formData = $form.serialize();
 
 			$.post( ajaxUrl, formData, function ( response ) {
-				$submitBtn.prop( 'disabled', false ).text( 'Submit Entry' );
+				$submitBtn.prop( 'disabled', false ).text( btnText );
 
 				if ( response.success ) {
-					showMessage( strings.submitted, 'success' );
+					const successMsg = isEditMode ? 'Entry Updated Successfully!' : 'Entry Submitted Successfully!';
+					showMessage( isEditMode ? successMsg : strings.submitted, 'success' );
 
 					// Show totals.
 					const totals = response.data.totals;
 					if ( totals ) {
 						const discLabel = totals.discrepancy_label || '';
 						const summaryLines = [
-							'<strong>Entry Submitted Successfully!</strong>',
+							'<strong>' + successMsg + '</strong>',
 							'Total Sales: ' + formatCurrency( totals.total_sales ),
 							'Cash to Bank: ' + formatCurrency( totals.cash_to_bank ),
 							'Discrepancy: ' + formatCurrency( totals.discrepancy ),
@@ -265,21 +332,42 @@
 						$( '#mscm-eod-message' ).html( summaryLines.join( '<br>' ) ).show();
 					}
 
-					// Reset form after delay.
-					setTimeout( function () {
-						$form[ 0 ].reset();
-						$( '.mscm-denom-total' ).text( formatCurrency( 0 ) );
-						$( '#mscm-payouts-container, #mscm-purchases-container' ).empty();
-						recalculateAll();
-					}, 2000 );
+					// Only reset form for new entries (not edits).
+					if ( ! isEditMode ) {
+						setTimeout( function () {
+							$form[ 0 ].reset();
+							$( '.mscm-denom-total' ).text( formatCurrency( 0 ) );
+							$( '#mscm-payouts-container, #mscm-purchases-container' ).empty();
+							recalculateAll();
+						}, 2000 );
+					}
 				} else {
 					showMessage( response.data.message || strings.error, 'error' );
 				}
 			} ).fail( function () {
-				$submitBtn.prop( 'disabled', false ).text( 'Submit Entry' );
+				$submitBtn.prop( 'disabled', false ).text( btnText );
 				showMessage( strings.error, 'error' );
 			} );
 		} );
+
+		// Pre-populate form when in edit mode.
+		if ( window.mscmEditEntry ) {
+			const entry = window.mscmEditEntry;
+
+			// Payouts.
+			if ( entry.payouts && entry.payouts.length ) {
+				entry.payouts.forEach( function ( p ) {
+					addPayoutRow( p );
+				} );
+			}
+
+			// Purchases.
+			if ( entry.purchases && entry.purchases.length ) {
+				entry.purchases.forEach( function ( p ) {
+					addPurchaseRow( p );
+				} );
+			}
+		}
 
 		// Initial calculation.
 		recalculateAll();

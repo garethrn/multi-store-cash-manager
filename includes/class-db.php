@@ -161,6 +161,7 @@ class MSCM_DB {
 			description varchar(255) NOT NULL,
 			amount decimal(10,2) NOT NULL DEFAULT 0.00,
 			category varchar(100) DEFAULT 'general',
+			payment_type varchar(10) NOT NULL DEFAULT 'cash',
 			created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY  (id),
 			KEY entry_id (entry_id),
@@ -193,6 +194,7 @@ class MSCM_DB {
 			period_month int(2) DEFAULT NULL,
 			period_quarter int(1) DEFAULT NULL,
 			target_amount decimal(10,2) NOT NULL DEFAULT 0.00,
+			working_days int(2) NOT NULL DEFAULT 0,
 			notes text DEFAULT '',
 			created_by bigint(20) UNSIGNED NOT NULL,
 			created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -289,6 +291,18 @@ class MSCM_DB {
 
 		// Store the database version.
 		update_option( 'mscm_db_version', MSCM_DB_VERSION );
+	}
+
+	/**
+	 * Run any needed database upgrades for existing installations.
+	 * Called on plugin init to add new columns introduced after initial install.
+	 */
+	public function maybe_upgrade() {
+		$installed = get_option( 'mscm_db_version', '0' );
+		if ( version_compare( $installed, MSCM_DB_VERSION, '<' ) ) {
+			// Use dbDelta via create_tables() which safely adds new columns.
+			$this->create_tables();
+		}
 	}
 
 	/**
@@ -607,11 +621,12 @@ class MSCM_DB {
 			$this->wpdb->insert(
 				$this->tables['payouts'],
 				array(
-					'entry_id'    => $entry_id,
-					'store_id'    => $store_id,
-					'description' => sanitize_text_field( $payout['description'] ),
-					'amount'      => floatval( $payout['amount'] ),
-					'category'    => sanitize_text_field( $payout['category'] ?? 'general' ),
+					'entry_id'     => $entry_id,
+					'store_id'     => $store_id,
+					'description'  => sanitize_text_field( $payout['description'] ),
+					'amount'       => floatval( $payout['amount'] ),
+					'category'     => sanitize_text_field( $payout['category'] ?? 'general' ),
+					'payment_type' => in_array( $payout['payment_type'] ?? 'cash', array( 'cash', 'bank' ), true ) ? $payout['payment_type'] : 'cash',
 				)
 			);
 		}
@@ -896,7 +911,7 @@ class MSCM_DB {
 	public function save_target( $data ) {
 		$allowed = array(
 			'store_id', 'period_type', 'period_year', 'period_month',
-			'period_quarter', 'target_amount', 'notes', 'created_by',
+			'period_quarter', 'target_amount', 'working_days', 'notes', 'created_by',
 		);
 
 		$sanitized = array();
