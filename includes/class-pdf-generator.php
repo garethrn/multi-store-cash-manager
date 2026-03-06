@@ -44,8 +44,8 @@ class MSCM_PDF_Generator {
 
 		$type      = sanitize_text_field( $_GET['type'] ?? 'eod' );
 		$store_id  = absint( $_GET['store_id'] ?? 0 );
-		$date_from = sanitize_text_field( $_GET['date_from'] ?? date( 'Y-m-01' ) );
-		$date_to   = sanitize_text_field( $_GET['date_to'] ?? date( 'Y-m-d' ) );
+		$date_from = sanitize_text_field( $_GET['date_from'] ?? wp_date( 'Y-m-01' ) );
+		$date_to   = sanitize_text_field( $_GET['date_to'] ?? wp_date( 'Y-m-d' ) );
 
 		$report = MSCM()->reports->generate( $type, $store_id, $date_from, $date_to );
 

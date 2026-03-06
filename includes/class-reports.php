@@ -39,10 +39,10 @@ class MSCM_Reports {
 	 */
 	public function generate( $type, $store_id = 0, $date_from = '', $date_to = '' ) {
 		if ( empty( $date_from ) ) {
-			$date_from = date( 'Y-m-01' );
+			$date_from = wp_date( 'Y-m-01' );
 		}
 		if ( empty( $date_to ) ) {
-			$date_to = date( 'Y-m-d' );
+			$date_to = wp_date( 'Y-m-d' );
 		}
 
 		switch ( $type ) {
@@ -287,8 +287,8 @@ class MSCM_Reports {
 		$targets = $wpdb->prefix . 'mscm_targets';
 		$stores  = $wpdb->prefix . 'mscm_stores';
 
-		$year  = date( 'Y', strtotime( $date_from ) );
-		$month = date( 'n', strtotime( $date_from ) );
+		$year  = wp_date( 'Y', strtotime( $date_from ) );
+		$month = wp_date( 'n', strtotime( $date_from ) );
 
 		$where_store  = $store_id ? $wpdb->prepare( ' AND s.id = %d', $store_id ) : '';
 		$where_store2 = $store_id ? $wpdb->prepare( ' AND e.store_id = %d', $store_id ) : '';
@@ -353,8 +353,8 @@ class MSCM_Reports {
 	 * @return float Expected progress percentage.
 	 */
 	private function get_expected_progress_percentage( $date_from, $date_to ) {
-		$days_in_month = date( 't', strtotime( $date_from ) );
-		$day_of_month  = date( 'j', strtotime( $date_to ) );
+		$days_in_month = wp_date( 't', strtotime( $date_from ) );
+		$day_of_month  = wp_date( 'j', strtotime( $date_to ) );
 
 		return round( ( $day_of_month / $days_in_month ) * 100, 1 );
 	}

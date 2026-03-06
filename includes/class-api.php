@@ -244,8 +244,8 @@ class MSCM_API {
 	public function get_report( $request ) {
 		$type      = $request->get_param( 'type' );
 		$store_id  = $request->get_param( 'store_id' ) ?? 0;
-		$date_from = $request->get_param( 'date_from' ) ?? date( 'Y-m-01' );
-		$date_to   = $request->get_param( 'date_to' ) ?? date( 'Y-m-d' );
+		$date_from = $request->get_param( 'date_from' ) ?? wp_date( 'Y-m-01' );
+		$date_to   = $request->get_param( 'date_to' ) ?? wp_date( 'Y-m-d' );
 
 		$report = MSCM()->reports->generate( $type, $store_id, $date_from, $date_to );
 

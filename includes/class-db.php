@@ -812,8 +812,8 @@ class MSCM_DB {
 			$date = current_time( 'Y-m-d' );
 		}
 
-		$month_start = date( 'Y-m-01', strtotime( $date ) );
-		$month_end   = date( 'Y-m-t', strtotime( $date ) );
+		$month_start = wp_date( 'Y-m-01', strtotime( $date ) );
+		$month_end   = wp_date( 'Y-m-t', strtotime( $date ) );
 
 		$store_where = '';
 		$params      = array();
@@ -869,7 +869,7 @@ class MSCM_DB {
 			$this->wpdb->prepare(
 				"SELECT COALESCE(SUM(target_amount), 0) FROM {$this->tables['targets']}
 				WHERE period_year = %d AND period_month = %d {$store_where}",
-				array_merge( array( date( 'Y', strtotime( $date ) ), date( 'n', strtotime( $date ) ) ), $params )
+				array_merge( array( wp_date( 'Y', strtotime( $date ) ), wp_date( 'n', strtotime( $date ) ) ), $params )
 			)
 		);
 
@@ -1066,10 +1066,10 @@ class MSCM_DB {
 	 */
 	public function get_sales_chart_data( $store_id = null, $date_from = null, $date_to = null ) {
 		if ( null === $date_from ) {
-			$date_from = date( 'Y-m-01' );
+			$date_from = wp_date( 'Y-m-01' );
 		}
 		if ( null === $date_to ) {
-			$date_to = date( 'Y-m-d' );
+			$date_to = wp_date( 'Y-m-d' );
 		}
 
 		$where  = array( 'entry_date BETWEEN %s AND %s' );

@@ -161,7 +161,7 @@ class MSCM_ML {
 		$entries_table = $wpdb->prefix . 'mscm_daily_entries';
 
 		// Get same day of week historical data.
-		$dow = date( 'w', strtotime( $date ) ); // 0 = Sunday.
+		$dow = wp_date( 'w', strtotime( $date ) ); // 0 = Sunday.
 
 		$same_dow_data = $wpdb->get_col(
 			$wpdb->prepare(
@@ -269,7 +269,7 @@ class MSCM_ML {
 		// Best performing day of week.
 		$by_dow   = array();
 		foreach ( $data as $entry ) {
-			$dow = date( 'N', strtotime( $entry->entry_date ) ); // 1=Monday, 7=Sunday.
+			$dow = wp_date( 'N', strtotime( $entry->entry_date ) ); // 1=Monday, 7=Sunday.
 			if ( ! isset( $by_dow[ $dow ] ) ) {
 				$by_dow[ $dow ] = array();
 			}

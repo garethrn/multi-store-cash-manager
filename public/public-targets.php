@@ -48,7 +48,7 @@ function mscm_targets_shortcode( $atts ) {
 	$currency = get_option( 'mscm_currency', 'R' );
 
 	$month_start = sprintf( '%04d-%02d-01', $year, $month );
-	$month_end   = date( 'Y-m-t', strtotime( $month_start ) );
+	$month_end   = wp_date( 'Y-m-t', strtotime( $month_start ) );
 	$today       = current_time( 'Y-m-d' );
 	$period_end  = min( $today, $month_end );
 

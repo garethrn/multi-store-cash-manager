@@ -116,8 +116,8 @@ function mscm_admin_entries_page() {
 	$stores = MSCM()->db->get_user_stores( get_current_user_id() );
 
 	$filter_store = absint( $_GET['store_id'] ?? 0 );
-	$filter_from  = sanitize_text_field( $_GET['date_from'] ?? date( 'Y-m-01' ) );
-	$filter_to    = sanitize_text_field( $_GET['date_to'] ?? date( 'Y-m-d' ) );
+	$filter_from  = sanitize_text_field( $_GET['date_from'] ?? wp_date( 'Y-m-01' ) );
+	$filter_to    = sanitize_text_field( $_GET['date_to'] ?? wp_date( 'Y-m-d' ) );
 	$filter_status = sanitize_text_field( $_GET['status'] ?? '' );
 	$paged        = max( 1, absint( $_GET['paged'] ?? 1 ) );
 	$per_page     = absint( get_option( 'mscm_entries_per_page', 20 ) );

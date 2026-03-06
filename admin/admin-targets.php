@@ -21,12 +21,12 @@ function mscm_render_targets_page() {
 
 	$stores   = MSCM()->db->get_user_stores( get_current_user_id() );
 	$currency = get_option( 'mscm_currency', 'R' );
-	$year     = absint( $_GET['year'] ?? date( 'Y' ) );
-	$month    = absint( $_GET['month'] ?? date( 'n' ) );
+	$year     = absint( $_GET['year'] ?? wp_date( 'Y' ) );
+	$month    = absint( $_GET['month'] ?? wp_date( 'n' ) );
 
 	// Get targets and actual sales for the selected period.
 	$month_start = sprintf( '%04d-%02d-01', $year, $month );
-	$month_end   = date( 'Y-m-t', strtotime( $month_start ) );
+	$month_end   = wp_date( 'Y-m-t', strtotime( $month_start ) );
 	$today       = current_time( 'Y-m-d' );
 	$period_end  = min( $today, $month_end );
 
@@ -40,7 +40,7 @@ function mscm_render_targets_page() {
 			<form method="get" action="">
 				<input type="hidden" name="page" value="mscm-targets">
 				<select name="year">
-					<?php for ( $y = date( 'Y' ) + 1; $y >= date( 'Y' ) - 2; $y-- ) : ?>
+					<?php for ( $y = (int) wp_date( 'Y' ) + 1; $y >= (int) wp_date( 'Y' ) - 2; $y-- ) : ?>
 						<option value="<?php echo esc_attr( $y ); ?>" <?php selected( $year, $y ); ?>><?php echo esc_html( $y ); ?></option>
 					<?php endfor; ?>
 				</select>
@@ -86,7 +86,7 @@ function mscm_render_targets_page() {
 						<?php endforeach; ?>
 					</select>
 					<select name="period_year">
-						<?php for ( $y = date( 'Y' ) + 1; $y >= date( 'Y' ) - 1; $y-- ) : ?>
+						<?php for ( $y = (int) wp_date( 'Y' ) + 1; $y >= (int) wp_date( 'Y' ) - 1; $y-- ) : ?>
 							<option value="<?php echo esc_attr( $y ); ?>" <?php selected( $year, $y ); ?>><?php echo esc_html( $y ); ?></option>
 						<?php endfor; ?>
 					</select>

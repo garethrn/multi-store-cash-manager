@@ -482,8 +482,8 @@ class MSCM_Ajax {
 
 		$report_type = sanitize_text_field( $_POST['report_type'] ?? 'eod' );
 		$store_id    = absint( $_POST['store_id'] ?? 0 );
-		$date_from   = sanitize_text_field( $_POST['date_from'] ?? date( 'Y-m-01' ) );
-		$date_to     = sanitize_text_field( $_POST['date_to'] ?? date( 'Y-m-d' ) );
+		$date_from   = sanitize_text_field( $_POST['date_from'] ?? wp_date( 'Y-m-01' ) );
+		$date_to     = sanitize_text_field( $_POST['date_to'] ?? wp_date( 'Y-m-d' ) );
 
 		$report = MSCM()->reports->generate( $report_type, $store_id, $date_from, $date_to );
 
@@ -505,8 +505,8 @@ class MSCM_Ajax {
 
 		$format    = sanitize_text_field( $_POST['format'] ?? 'csv' );
 		$store_id  = absint( $_POST['store_id'] ?? 0 );
-		$date_from = sanitize_text_field( $_POST['date_from'] ?? date( 'Y-m-01' ) );
-		$date_to   = sanitize_text_field( $_POST['date_to'] ?? date( 'Y-m-d' ) );
+		$date_from = sanitize_text_field( $_POST['date_from'] ?? wp_date( 'Y-m-01' ) );
+		$date_to   = sanitize_text_field( $_POST['date_to'] ?? wp_date( 'Y-m-d' ) );
 
 		$url = MSCM()->export->export( $format, $store_id, $date_from, $date_to );
 
@@ -535,8 +535,8 @@ class MSCM_Ajax {
 			'id'             => absint( $_POST['target_id'] ?? 0 ),
 			'store_id'       => absint( $_POST['store_id'] ?? 0 ),
 			'period_type'    => sanitize_text_field( $_POST['period_type'] ?? 'monthly' ),
-			'period_year'    => absint( $_POST['period_year'] ?? date( 'Y' ) ),
-			'period_month'   => absint( $_POST['period_month'] ?? date( 'n' ) ),
+			'period_year'    => absint( $_POST['period_year'] ?? wp_date( 'Y' ) ),
+			'period_month'   => absint( $_POST['period_month'] ?? wp_date( 'n' ) ),
 			'period_quarter' => absint( $_POST['period_quarter'] ?? 0 ),
 			'target_amount'  => floatval( $_POST['target_amount'] ?? 0 ),
 			'notes'          => sanitize_textarea_field( wp_unslash( $_POST['notes'] ?? '' ) ),

@@ -103,7 +103,7 @@ Create WordPress pages with the following shortcodes for frontend access:
 
 1. Navigate to the page containing `[mscm_end_of_day]`.
 2. Select the date and your assigned store.
-3. Enter the **cash denomination breakdown** (R200, R100, R50, R20, R10, R5, R2, R1, 50c).
+3. Enter the **cash denomination breakdown** (R200, R100, R50, R20, R10, R5, R2, R1, 50c, 20c, 10c).
 4. The **Total Cash** and **Cash to Bank** are calculated automatically.
 5. Enter **Credit Card**, **EFT**, and **Other Digital** payment amounts.
 6. Add any **Payouts** or **Purchases/Expenses** as needed.
@@ -147,7 +147,7 @@ The plugin performs the following calculations automatically:
 |-------|---------|
 | **Total Cash** | Sum of all denomination quantities × values |
 | **Cash to Bank** | Total Cash − Float Amount |
-| **Total Sales** | Cash Total + Credit Card + EFT + Other Digital |
+| **Total Sales** | Cash to Bank (after float) + Credit Card + EFT + Other Digital |
 | **Discrepancy** | Calculated Sales − POS Reported Sales |
 | **Net Banking** | Cash to Bank − Payouts − Purchases |
 
@@ -298,6 +298,7 @@ Includes all Store User capabilities, plus:
 | `mscm_verify_entry` | Verify pending entries |
 | `mscm_view_store_entries` | View all entries for managed store |
 | `mscm_manage_store` | Edit store settings |
+| `mscm_manage_users` | Assign users to managed store |
 | `mscm_set_targets` | Create and update targets |
 | `mscm_view_reports` | View store reports |
 | `mscm_export_reports` | Export reports to CSV |
